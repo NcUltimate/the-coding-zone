@@ -33,5 +33,7 @@ Your application should list all possible checkmates, one per line. The image be
 
 ## Credits
 
-Special thanks to [Dustin Fox](@dfox) for proposing this problem.
+Special thanks to:
+ - [Dustin Fox](mailto:dfox@enova.com) for proposing this problem.
+ - [Nick Matelli](mailto:nmatelli@enova.com) for the test-cases
 
