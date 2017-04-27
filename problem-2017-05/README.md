@@ -2,6 +2,8 @@
 
 You're given an 8x8 chess board containing white rooks, white bishops, a white king and a black king. Assuming it's white's turn to move, you must write a program that will determine if there is a mate in one move.
 
+Solutions to be presented on May 25, 2017!
+
 ## Description
 
 Input should be taken in the form of multiline ASCII text:
