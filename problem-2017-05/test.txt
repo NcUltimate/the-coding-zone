@@ -1,0 +1,43 @@
+INPUT:
+BK h8
+WK f2
+WR b3
+WB e4
+WB h6
+
+OUTPUT:
+b3 - b8
+
+INPUT:
+WR a7
+WR b6
+WR c5
+WK a1
+BK g8
+
+OUTPUT:
+b6 - b8
+c5 - c8
+
+INPUT:
+BK h8
+WB f8
+WB e7
+WB f7
+WB g6
+WB g5
+WB h4
+WK a1
+
+OUTPUT:
+e7 - f6
+g5 - f6
+
+INPUT:
+BK d8
+WK d6
+WR h4
+
+OUTPUT:
+h4 - h8
+
