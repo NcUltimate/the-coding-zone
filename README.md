@@ -16,4 +16,4 @@ A series of coding problems for those who want to code!
 
 - Hipchat Room: `The Coding Zone`
 - Wiki-Page: [The Coding Zone](https://wiki.enova.com/display/SE/Coding+Zone)
-- Send Problem Proposals to Costi Gavrilescu or Zamir Syed
+- Send Problem Proposals to [Costi Gavrilescu](mailto:cgavrilescu@enova.com) or [Zamir Syed](mailto:zsyed@enova.com)
