@@ -1,4 +1,4 @@
-# the-coding-zone
+# The-Coding-Zone
 A series of coding problems for those who want to code!
 
 ## Guidelines
