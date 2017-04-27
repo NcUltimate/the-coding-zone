@@ -27,7 +27,9 @@ b3 - b8
 ```
 
 In this example moving the white roook from b3 to b8 will result in checkmate.
-Your application should list all possible checkmates, one per line.
+Your application should list all possible checkmates, one per line. The image below summarizes this case:
+
+![test-case](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-05/board.png)
 
 ## Credits
 
