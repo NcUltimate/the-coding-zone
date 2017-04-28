@@ -31,6 +31,12 @@ b3 - b8
 In this example moving the white roook from b3 to b8 will result in checkmate.
 Your application should list all possible checkmates, one per line. The image below summarizes this case:
 
+## Limits
+
+- There is no limit to the number of pieces in the board-input. For example, there could be 30 white rooks on the board.
+- You may assume the board will contain at least one white king and one black king
+- You may assume all inputs are correctly formatted values (e.g. first character of a line is always W or B)
+
 ![test-case](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-05/board.png)
 
 ## Credits
