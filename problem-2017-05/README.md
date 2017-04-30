@@ -19,7 +19,7 @@ WB h6
 Each line represents the position of a piece.
 - The first character denotes the color `(B=black, W=white)`.
 - The second character denotes the piece `(K=king, B=bishop, R=rook)`.
-- The third character will always gonna be a space
+- The third character will always be a space
 - The fourth character will denote the _column_ (aka _file_ in chess lingo)
 - The fifth character will denote the _row_ (aka _rank_ in chess lingo)
 
