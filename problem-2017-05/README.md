@@ -38,6 +38,7 @@ Your application should list all possible checkmates, one per line. The image be
 - There is no limit to the number of pieces in the board-input. For example, there could be 30 white rooks on the board.
 - You may assume the board will contain at least a white king and a black king
 - You may assume all inputs are correctly formatted values (e.g. first character of a line is always W or B)
+- You may assume that the black king is not in check on the supplied board (otherwise it could not be white's move!)
 
 
 ## Credits
