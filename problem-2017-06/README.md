@@ -40,5 +40,5 @@ W 9
 
 # Limits
 
-1 You may assume that no position on the grid will contain multiple objects. Each position will either be empty, contain a single deflector, or contain the target.
-2 You may assume all the positional coordinates are within the boundaries of the grid specified by the first line.
+1. You may assume that no position on the grid will contain multiple objects. Each position will either be empty, contain a single deflector, or contain the target.
+2. You may assume all the positional coordinates are within the boundaries of the grid specified by the first line.
