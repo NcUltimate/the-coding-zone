@@ -30,12 +30,13 @@ The first line contains the dimensions of the rectangle: _rows_ and _columns_. S
 
 Your application must output multi-line ASCII text indicating all positions from which a horizontal or vertical laser beam would reach the target. To communicate this clearly, label the four sides of the grid as N, S, E, W so that the NW corner is at position (1, 1). Each line of the output should contain two fields: _side_ and _position_, where position is simply the row or column number for that side.
 
-In the example above, a laser beam fired from the east side at row 4 would hit the target, so this would be outputted as `E 4`. Similarly beams shot from the positions `E 9` and `W 9` would hit the target (check for yourself!). No other positions will result in the target being hit. Hence a valid output of the program would be:
+In the example above, a laser beam fired from the east side at row 4 would hit the target, so this would be outputted as `E 4`. Similarly beams shot from the positions `E 8`, `W 2` and `W 8` would hit the target (check for yourself!). No other positions will result in the target being hit. Hence a valid output of the program would be:
 
 ```
 E 4
-E 9
-W 9
+E 8
+W 2
+W 8
 ```
 
 # Limits
