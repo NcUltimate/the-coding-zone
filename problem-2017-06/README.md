@@ -42,3 +42,5 @@ W 9
 
 1. You may assume that no position on the grid will contain multiple objects. Each position will either be empty, contain a single deflector, or contain the target.
 2. You may assume all the positional coordinates are within the boundaries of the grid specified by the first line.
+
+Please drop solutions into the [solutions directory](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-06/solutions/) in the form of a PR.
