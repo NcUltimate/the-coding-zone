@@ -20,7 +20,12 @@ type Grid struct {
 	cols int
 	tRow int
 	tCol int
-	defs []*Deflector
+	defs map[string]*Deflector
+}
+
+// Key ...
+func key(row, col int) string {
+	return fmt.Sprintf("(%d,%d)", row, col)
 }
 
 // Random creates a random grid using the supplied size and density
@@ -38,6 +43,7 @@ func (g *Grid) Random(rows int, cols int, density float64, seed int) {
 	g.tCol = rand.Intn(cols) + 1
 
 	// Add Deflectors
+	g.defs = make(map[string]*Deflector)
 	for r := 1; r <= rows; r++ {
 		for c := 1; c <= cols; c++ {
 
@@ -73,6 +79,7 @@ func (g *Grid) Load(filename string) {
 	fmt.Sscanf(line, "%d %d", &g.tRow, &g.tCol)
 
 	// Read Deflectors
+	g.defs = make(map[string]*Deflector)
 	for scanner.Scan() {
 		line := scanner.Text()
 		var row int
@@ -83,10 +90,34 @@ func (g *Grid) Load(filename string) {
 	}
 }
 
+// Save saves the grid to the supplied filename
+func (g *Grid) Save(filename string) {
+
+	// Open File
+	file, err := os.Create(filename)
+	dieOn(err)
+	defer file.Close()
+
+	// Write Dimensions
+	fmt.Fprintf(file, "%d %d\n", g.rows, g.cols)
+
+	// Write Target
+	fmt.Fprintf(file, "%d %d\n", g.tRow, g.tCol)
+
+	// Write Deflectors
+	for _, d := range g.defs {
+		if d.forw {
+			fmt.Fprintf(file, "%d %d /\n", d.row, d.col)
+		} else {
+			fmt.Fprintf(file, "%d %d \\\n", d.row, d.col)
+		}
+	}
+}
+	
 // AddDef adds a deflector
 func (g *Grid) AddDef(row int, col int, forw bool) {
 	d := Deflector{row: row, col: col, forw: forw}
-	g.defs = append(g.defs, &d)
+	g.defs[key(row,col)] = &d
 }
 
 // Hit returns true if the target is at the supplied position
@@ -96,12 +127,8 @@ func (g *Grid) Hit(row int, col int) bool {
 
 // GetDef returns the deflector at the supplied position
 func (g *Grid) GetDef(row int, col int) (*Deflector, bool) {
-	for _, d := range g.defs {
-		if d.row == row && d.col == col {
-			return d, true
-		}
-	}
-	return nil, false
+	d, ok := g.defs[key(row,col)]
+	return d, ok
 }
 
 // Display ...
@@ -174,6 +201,31 @@ func (g *Grid) Solve() {
 		laser := &Laser{g.rows+1, c, North, g}
 		if laser.Fire() {
 			fmt.Println("S", c)
+		}
+	}
+}
+
+// Smart ...
+func (g *Grid) Smart() {
+
+	// Try To Escape From All Directions
+	for _, dir := range []int{North, South, East, West} {
+
+		// Start Laser At Target
+		laser := &Laser{g.tRow, g.tCol, dir, g}
+
+		// Escaped?
+		if laser.Escape() {
+			switch {
+			case laser.dir == North:
+				fmt.Println("N", laser.col)
+			case laser.dir == South:
+				fmt.Println("S", laser.col)
+			case laser.dir == East:
+				fmt.Println("E", laser.row)
+			case laser.dir == West:
+				fmt.Println("W", laser.row)
+			}
 		}
 	}
 }

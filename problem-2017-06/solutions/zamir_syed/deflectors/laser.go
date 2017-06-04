@@ -36,9 +36,29 @@ func (l *Laser) Fire() bool {
 	}
 }
 
+// Escape fires the laser hoping to escape the board
+func (l *Laser) Escape() bool {
+
+	for {
+
+		// Move One Unit
+		l.move()
+
+		// Hit Target?
+		if l.hit() {
+			return false
+		}
+
+		// Escaped
+		if l.escaped() {
+			return true
+		}
+	}
+}
+
 // Move moves the laser one unit
 func (l *Laser) move() {
-	
+
 	// Move One Unit
 	switch {
 	case l.dir == North:
@@ -80,7 +100,7 @@ func (l *Laser) hit() bool {
 	return l.grid.Hit(l.row, l.col)
 }
 
-// Hit returns true if the laser has reached the target
+// Hit returns true if the laser has escaped the grid
 func (l *Laser) escaped() bool {
 	switch {
 	case l.row < 1:
