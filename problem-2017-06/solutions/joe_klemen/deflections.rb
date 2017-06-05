@@ -90,24 +90,27 @@ module LaserGrid
 
     private
 
-    def traverse(prev, diff, visited = 1)
-      return unless visited < grid.size
+    def traverse(prev, diff)
+      visited = 1
+      loop do
+        return unless visited < grid.size
 
-      new_point = prev + diff
-      return if grid.type(new_point) == '*'
-      return new_point unless grid.include?(new_point)
+        new_point = prev + diff
+        return if grid.type(new_point) == '*'
+        return new_point unless grid.include?(new_point)
 
-      diff =
-        case grid.type(new_point)
-        when '/'
-          Point[-diff.y, -diff.x]
-        when '\\'
-          Point[diff.y, diff.x]
-        else
-          diff
-        end
-
-      traverse(new_point, diff, visited + 1)
+        diff =
+          case grid.type(new_point)
+          when '/'
+            Point[-diff.y, -diff.x]
+          when '\\'
+            Point[diff.y, diff.x]
+          else
+            diff
+          end
+        visited += 1
+        prev = new_point
+      end
     end
   end
 
