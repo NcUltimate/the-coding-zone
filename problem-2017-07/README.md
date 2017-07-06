@@ -37,7 +37,7 @@ which is technically a conditional 5th move type:
   - Falling Move: `(x, y) ⇒ (x, y - 1)`
 
 As long as Mario is above an empty space, he must fall and cannot perform any
-other move.
+other move. The bottom edge of the board (i.e. `y = 0`) will ultimately prevent Mario from falling infinitely.
 
 If a block is encountered along a 'jump path', Mario must stop movement
 immediately and handle the space he is in appropriately. For example, if
