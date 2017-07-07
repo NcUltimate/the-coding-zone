@@ -87,3 +87,10 @@ If you have any other questions please contact us in `The Coding Zone` HipChat r
 # Submitting Solutions
 
 Please drop solutions into the [solutions directory](https://git.enova.com/fun/the-coding-zone/tree/master/problem-2017-07/solutions) in the form of a PR. Alternatively you can send your solution directly to the [organizers](mailto:zsyed@enova.com,cgavrilescu@enova.com).
+
+## Credits
+
+Special thanks to:
+ - [Joseph Klemen](mailto:jklemen@enova.com) for proposing this problem.
+ 
+
