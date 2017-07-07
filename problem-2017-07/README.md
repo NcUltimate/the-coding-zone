@@ -43,11 +43,7 @@ The corresponding input file would contain the following data:
 13 3 C
 ```
 
-### Output
-
-The output should be a single positive integer representing the maximum number of coins attained when following the above objective.
-
-### Traversal
+### Mario's Moves
 
 When Mario is above a solid block (or the bottom of the grid), he is capable of
 four (4) different moves:
@@ -72,6 +68,10 @@ would stop movement at `(x, y + 1)` and be forced to begin falling.
 
 Mario cannot step outside of the grid boundaries, even if he is performing a
 move that would otherwise cause him to land in bounds.
+
+### Output
+
+The output should be a single positive integer representing the maximum number of coins attained when following the above objective. For the sample board above the correct output value would be `8`.
 
 ### FAQ
 
