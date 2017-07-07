@@ -22,6 +22,25 @@ Every other space is empty. Also, the comments are there to explan the file form
 The corresponding input file would contain the following data:
 
 ```
+14 4
+0 0
+1 1 C
+1 2 C
+2 3 C
+3 2 C
+7 1 B
+8 3 B
+8 4 C
+9 0 C
+9 3 B
+9 4 C
+10 0 C
+10 3 B
+11 0 C
+11 3 B
+12 3 B
+12 4 C
+13 3 C
 ```
 
 ### Output
