@@ -15,7 +15,14 @@ The input will be a file with the following format:
 1 0 B   # block at (1, 0)
 1 3 B   # block at (1, 3)
 ```
-Every other space is empty.
+Every other space is empty. Also, the comments are there to explan the file format. The actual file will not contain comments. For example see the following board.
+
+![example](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-06/deflectors.png)
+
+The corresponding input file would contain the following data:
+
+```
+```
 
 ### Output
 
