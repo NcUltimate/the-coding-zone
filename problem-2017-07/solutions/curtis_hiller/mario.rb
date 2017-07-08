@@ -1,3 +1,5 @@
+require 'active_support/all'
+
 class Result
   attr_accessor :x, :y, :coins
 
@@ -74,11 +76,6 @@ class MiniMario
     end
   end
 
-  def try_coins(result)
-    return 0 unless result && result.coins
-    result.coins
-  end
-
   def move!
     loop do
       @scroll += 1
@@ -97,7 +94,7 @@ class MiniMario
         results[w.location] = Result.new(
           w.x,
           w.y,
-          [w.coins + coins, try_coins(results[w.location])].map(&:to_i).max
+          [w.coins + coins, results[w.location].try(:coins)].map(&:to_i).max
         )
       end
         
@@ -107,7 +104,7 @@ class MiniMario
         results[hj.location] = Result.new(
           hj.x,
           hj.y,
-          [hj.coins + coins, try_coins(results[hj.location])].map(&:to_i).max
+          [hj.coins + coins, results[hj.location].try(:coins)].map(&:to_i).max
         )
       end
 
@@ -117,7 +114,7 @@ class MiniMario
         results[lj.location] = Result.new(
           lj.x,
           lj.y,
-          [lj.coins + coins, try_coins(results[lj.location])].map(&:to_i).max
+          [lj.coins + coins, results[lj.location].try(:coins)].map(&:to_i).max
         )
       end
     end
