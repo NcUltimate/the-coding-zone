@@ -36,7 +36,6 @@ The corresponding input file would contain the following data:
 9 4 C
 10 0 C
 10 3 B
-11 0 C
 11 3 B
 12 3 B
 12 4 C
