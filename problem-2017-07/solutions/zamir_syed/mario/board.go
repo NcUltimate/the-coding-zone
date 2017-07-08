@@ -28,14 +28,6 @@ func NewBoard(w, h int) *Board {
 	return b
 }
 
-// None return true if the space is empty
-func (b *Board) None(x, y int) bool {
-	if !b.valid(x, y) {
-		return true
-	}
-	return b.Spaces[x][y] == None
-}
-
 // Coin return true if the space contains a coin
 func (b *Board) Coin(x, y int) bool {
 	return b.valid(x, y) && (b.Spaces[x][y] == Coin)

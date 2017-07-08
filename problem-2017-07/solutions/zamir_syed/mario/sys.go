@@ -24,3 +24,27 @@ func atof(s string) float64 {
 	dieOn(err)
 	return f
 }
+
+func green(s string) string {
+	var result string
+	result += "\033[0;32m"
+	result += s
+	result += "\033[0m"
+	return result
+}
+
+func block(s string) string {
+	var result string
+	result += "\033[7;34m"
+	result += s
+	result += "\033[0m"
+	return result
+}
+
+func blue(s string) string {
+	var result string
+	result += "\033[0;35m"
+	result += s
+	result += "\033[0m"
+	return result
+}

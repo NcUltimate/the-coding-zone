@@ -112,7 +112,7 @@ func (p *Player) Long() bool {
 
 	// Now Fall
 	p.fall()
-	
+
 	// Success
 	if p.X > origX {
 		return true
@@ -149,7 +149,7 @@ func (p *Player) High() bool {
 
 	// Now Fall
 	p.fall()
-	
+
 	// Success
 	if p.X > origX {
 		return true
@@ -218,9 +218,9 @@ func (p *Player) eat() bool {
 		return false
 	}
 
-	// Compute ID If Coin
-	coinID := y * p.B.W + x
-	
+	// Compute ID Of Coin
+	coinID := y*p.B.W + x
+
 	// Check If Coin Already Eaten
 	_, ok := p.Coins[coinID]
 	if ok {
@@ -262,7 +262,57 @@ func (p *Player) Display() {
 	}
 }
 
+// Score ...
+func (p *Player) Score() int {
+	return len(p.Coins)
+}
+
 // Wall returns true if there is a wall in the delta-position
 func (p *Player) wall(dX, dY int) bool {
 	return p.B.Wall(p.X+dX, p.Y+dY)
+}
+
+// Touched returns true of the space was touched
+func (p *Player) touched(x, y int) bool {
+	for _, s := range p.Path {
+		if s.X == x && s.Y == y {
+			return true
+		}
+	}
+	return false
+}
+
+// DrawIt draws the board with touched moves!
+func (p *Player) DrawIt() {
+
+	// For Each Row (Downward)
+	for y := p.B.H - 1; y >= 0; y-- {
+
+		// For Each Column
+		for x := 0; x < p.B.W; x++ {
+
+			// Object
+			object := p.B.Spaces[x][y]
+
+			// Touched?
+			touched := p.touched(x, y)
+
+			// Render Object
+			switch {
+			case object == Coin && touched:
+				fmt.Printf(green("o"))
+			case object == Coin && !touched:
+				fmt.Printf("o")
+			case object == Wall:
+				fmt.Printf(block(" "))
+			case object == None && touched:
+				fmt.Printf(blue("-"))
+			default:
+				fmt.Printf(".")
+			}
+		}
+
+		// Next Row
+		fmt.Println()
+	}
 }
