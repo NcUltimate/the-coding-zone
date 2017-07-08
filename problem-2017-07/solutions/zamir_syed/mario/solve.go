@@ -5,7 +5,7 @@ import (
 )
 
 // Solve ...
-func Solve(b *Board, startX int, startY int) {
+func Solve(b *Board) {
 
 	var moves []int
 	var bestScore int
@@ -17,12 +17,13 @@ func Solve(b *Board, startX int, startY int) {
 	for {
 
 		// New Player
-		player := NewPlayer(b, startX, startY)
+		player := NewPlayer(b)
 		ending := player.Play(moves)
 
 		// New High-Score?
 		if ending == Done && player.Score() > bestScore {
 			fmt.Println(Pretty(moves), player.Score())
+			player.DrawIt()
 
 			// Record Best
 			bestScore = player.Score()
@@ -37,7 +38,9 @@ func Solve(b *Board, startX int, startY int) {
 	}
 
 	// Draw
-	winner := NewPlayer(b, startX, startY)
+	fmt.Println("Best Solution:", bestScore)
+	fmt.Println("-------------")
+	winner := NewPlayer(b)
 	winner.Play(bestMoves)
 	winner.DrawIt()
 

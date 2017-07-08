@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 // Objects ...
@@ -15,6 +16,8 @@ const (
 type Board struct {
 	W      int
 	H      int
+	StartX int
+	StartY int
 	Spaces [][]int
 }
 
@@ -26,6 +29,32 @@ func NewBoard(w, h int) *Board {
 		b.Spaces[x] = make([]int, h)
 	}
 	return b
+}
+
+// Save ...
+func (b *Board) Save(filename string) {
+
+	// Open File
+	file, err := os.Create(filename)
+	dieOn(err)
+	defer file.Close()
+
+	// Write Dimensions
+	fmt.Fprintf(file, "%d %d\n", b.W, b.H)
+
+	// Write Starting
+	fmt.Fprintf(file, "%d %d\n", b.StartX, b.StartY)
+
+	for x := 0; x < b.W; x++ {
+		for y := 0; y < b.H; y++ {
+			switch {
+			case b.Coin(x, y):
+				fmt.Fprintf(file, "%d %d C\n", x, y)
+			case b.Wall(x, y):
+				fmt.Fprintf(file, "%d %d B\n", x, y)
+			}
+		}
+	}
 }
 
 // Coin return true if the space contains a coin

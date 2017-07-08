@@ -36,11 +36,11 @@ type Player struct {
 }
 
 // NewPlayer ...
-func NewPlayer(b *Board, x, y int) *Player {
+func NewPlayer(b *Board) *Player {
 	return &Player{
 		B:     b,
-		X:     x,
-		Y:     y,
+		X:     b.StartX,
+		Y:     b.StartY,
 		Coins: make(map[int]bool),
 	}
 }
@@ -306,7 +306,7 @@ func (p *Player) DrawIt() {
 			case object == Wall:
 				fmt.Printf(block(" "))
 			case object == None && touched:
-				fmt.Printf(blue("-"))
+				fmt.Printf(blue("*"))
 			default:
 				fmt.Printf(".")
 			}
