@@ -1,16 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-)
-
-// Moves ...
-const (
-	Walk = 0
-	Jump = 1
-	High = 2
-	Long = 3
 )
 
 func main() {
@@ -21,5 +12,5 @@ func main() {
 	// Board
 	board, startX, startY := Build(os.Args[1])
 	board.Display()
-	fmt.Println(startX, startY)
+	Solve(board, startX, startY)
 }

@@ -13,8 +13,8 @@ const (
 
 // Board ...
 type Board struct {
-	W int
-	H int
+	W      int
+	H      int
 	Spaces [][]int
 }
 
@@ -36,14 +36,22 @@ func (b *Board) None(x, y int) bool {
 	return b.Spaces[x][y] == None
 }
 
-// Coin return true if the space is empty
+// Coin return true if the space contains a coin
 func (b *Board) Coin(x, y int) bool {
 	return b.valid(x, y) && (b.Spaces[x][y] == Coin)
 }
 
-// Wall return true if the space is empty
+// Wall return true if the space has a wall or if it is out of bounds
 func (b *Board) Wall(x, y int) bool {
-	return b.valid(x, y) && (b.Spaces[x][y] == Wall)
+	return !b.valid(x, y) || (b.Spaces[x][y] == Wall)
+}
+
+// Object returns the object in the supplied space
+func (b *Board) Object(x, y int) int {
+	if !b.valid(x, y) {
+		return None
+	}
+	return b.Spaces[x][y]
 }
 
 // Valid returns true if the supplied corrdinates are valid
@@ -76,7 +84,7 @@ func (b *Board) Add(x, y, object int) {
 func (b *Board) Display() {
 
 	// For Each Row (Downward)
-	for y := b.H-1; y >= 0; y-- {
+	for y := b.H - 1; y >= 0; y-- {
 
 		// For Each Column
 		for x := 0; x < b.W; x++ {

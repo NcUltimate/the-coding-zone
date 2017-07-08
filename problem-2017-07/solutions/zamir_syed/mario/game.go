@@ -20,7 +20,7 @@ func Build(filename string) (*Board, int, int) {
 	var startX int
 	var startY int
 	fmt.Fscanf(file, "%d %d\n", &startX, &startY)
-	
+
 	// New Board
 	b := NewBoard(width, height)
 
