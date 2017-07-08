@@ -99,7 +99,7 @@ func (b *Board) Display() {
 			case object == Wall:
 				fmt.Printf("#")
 			default:
-				fmt.Printf(" ")
+				fmt.Printf("-")
 			}
 		}
 

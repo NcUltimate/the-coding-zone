@@ -7,8 +7,9 @@ func Solve(b *Board, startX int, startY int) {
 	player := NewPlayer(b, startX, startY)
 
 	moves := []int{
+		Long,
 		Walk,
-		Walk,
+		High,
 		Walk,
 		Jump,
 		Walk,

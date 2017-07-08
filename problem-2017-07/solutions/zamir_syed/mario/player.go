@@ -31,7 +31,7 @@ type Player struct {
 	B     *Board
 	X     int
 	Y     int
-	Coins map[int]int
+	Coins map[int]bool
 	Path  []Space
 }
 
@@ -41,7 +41,7 @@ func NewPlayer(b *Board, x, y int) *Player {
 		B:     b,
 		X:     x,
 		Y:     y,
-		Coins: make(map[int]int),
+		Coins: make(map[int]bool),
 	}
 }
 
@@ -64,6 +64,10 @@ func (p *Player) Play(moves []int) int {
 			success = p.Walk()
 		case m == Jump:
 			success = p.Jump()
+		case m == High:
+			success = p.High()
+		case m == Long:
+			success = p.Long()
 		}
 
 		// Success?
@@ -81,18 +85,92 @@ func (p *Player) Play(moves []int) int {
 	return Good
 }
 
-// Jump jumps up two spaces
+// Long performs a long-jump (NE,E,E)
+func (p *Player) Long() bool {
+
+	// See If Moved Right By End
+	origX := p.X
+
+	// No Wall NE
+	if !p.wall(1, 1) {
+		p.X++
+		p.Y++
+		p.touch()
+
+		// No Wall East?
+		if !p.wall(1, 0) {
+			p.X++
+			p.touch()
+
+			// No Wall East?
+			if !p.wall(1, 0) {
+				p.X++
+				p.touch()
+			}
+		}
+	}
+
+	// Now Fall
+	p.fall()
+	
+	// Success
+	if p.X > origX {
+		return true
+	}
+
+	// Not Useful
+	return false
+}
+
+// High performs a high-jump (N,N,NE)
+func (p *Player) High() bool {
+
+	// See If Moved Right By End
+	origX := p.X
+
+	// No Wall Above?
+	if !p.wall(0, 1) {
+		p.Y++
+		p.touch()
+
+		// No Wall Above?
+		if !p.wall(0, 1) {
+			p.Y++
+			p.touch()
+
+			// Wall North-East?
+			if !p.wall(1, 1) {
+				p.X++
+				p.Y++
+				p.touch()
+			}
+		}
+	}
+
+	// Now Fall
+	p.fall()
+	
+	// Success
+	if p.X > origX {
+		return true
+	}
+
+	// Not Useful
+	return false
+}
+
+// Jump performs a jump (N,N)
 func (p *Player) Jump() bool {
 
 	// No Wall Above?
-	if !p.B.Wall(p.X, p.Y+1) {
+	if !p.wall(0, 1) {
 
 		// Move Up One
 		p.Y++
 		p.touch()
 
 		// No Wall Above?
-		if !p.B.Wall(p.X, p.Y+1) {
+		if !p.wall(0, 1) {
 
 			// Move Up Again
 			p.Y++
@@ -114,7 +192,7 @@ func (p *Player) Walk() bool {
 	}
 
 	// Wall To Right
-	if p.B.Wall(p.X+1, p.Y) {
+	if p.wall(1, 0) {
 		return false
 	}
 
@@ -140,14 +218,17 @@ func (p *Player) eat() bool {
 		return false
 	}
 
+	// Compute ID If Coin
+	coinID := y * p.B.W + x
+	
 	// Check If Coin Already Eaten
-	coinY, ok := p.Coins[x]
-	if ok || coinY == y {
+	_, ok := p.Coins[coinID]
+	if ok {
 		return false
 	}
 
 	// Eat Coin!
-	p.Coins[x] = y
+	p.Coins[coinID] = true
 	return true
 }
 
@@ -155,7 +236,7 @@ func (p *Player) eat() bool {
 func (p *Player) fall() {
 
 	// While No Wall Beneath Player
-	for !p.B.Wall(p.X, p.Y-1) {
+	for !p.wall(0, -1) {
 		p.Y--
 		p.touch()
 	}
@@ -179,4 +260,9 @@ func (p *Player) Display() {
 		}
 		fmt.Println()
 	}
+}
+
+// Wall returns true if there is a wall in the delta-position
+func (p *Player) wall(dX, dY int) bool {
+	return p.B.Wall(p.X+dX, p.Y+dY)
 }
