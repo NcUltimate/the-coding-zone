@@ -17,7 +17,7 @@ The input will be a file with the following format:
 ```
 Every other space is empty. Also, the comments are there to explan the file format. The actual file will not contain comments. For example see the following board.
 
-![example](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-07/mini-mario.png)
+![example](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-07/mini-sample.png)
 
 The corresponding input file would contain the following data:
 
