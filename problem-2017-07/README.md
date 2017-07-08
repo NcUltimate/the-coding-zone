@@ -22,7 +22,7 @@ Every other space is empty. Also, the comments are there to explan the file form
 The corresponding input file would contain the following data:
 
 ```
-14 4
+14 5
 0 0
 1 1 C
 1 2 C
