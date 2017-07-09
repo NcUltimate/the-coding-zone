@@ -2,19 +2,19 @@ module Mario
   class PathFinder 
     class << self
       def fall(grid, p)
-        new(grid).fall(p)
+        self.new(grid).fall(p)
       end
 
       def std_move(grid, p)
-        new(grid).std_move(p)
+        self.new(grid).std_move(p)
       end
 
       def high_jump(grid, p)
-        new(grid).high_jump(p)
+        self.new(grid).high_jump(p)
       end
 
       def long_jump(grid, p)
-        new(grid).long_jump(p)
+        self.new(grid).long_jump(p)
       end
     end
 
@@ -54,7 +54,7 @@ module Mario
       jump = std_jump(p)
       fall = fall_and_collect(move_and_collect(p, *path))
 
-      fall.coins = fall.coins | jump.coins
+      fall.coins.merge!(jump.coins)
       fall
     end
 
@@ -63,20 +63,19 @@ module Mario
       if fall.to == move.to
         move
       else
-        move = Move.new(move.from, fall.to, move.coins | fall.coins)
+        move = Move.new(move.from, fall.to, move.coins.merge(fall.coins))
         fall_and_collect(move)
       end
     end
 
     def move_and_collect(p, *path)
       end_pos = p
-
       move = Move.new(p, end_pos)
       path.each do |step|
         end_pos = move.to + step
         return move unless grid.can_enter?(end_pos)
 
-        move.coins << end_pos if grid.coin_at?(end_pos)
+        move.coins[end_pos.hash] = true if grid.coin_at?(end_pos)
         move.to = end_pos
       end
       move

@@ -7,8 +7,8 @@ require_relative './grid.rb'
 
 if ARGV.length >= 1
   inputs  = Mario::FileReader.read!(ARGV[0])
-  grid = Mario::Grid.new(*inputs)
-  result = Mario::Algorithm.run!(grid)
+  grid    = Mario::Grid.new(*inputs)
+  result  = Mario::Algorithm.run!(grid)
   p result
 else
   puts 'Usage: ruby mario.rb <filename>'

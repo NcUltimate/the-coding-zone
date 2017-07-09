@@ -2,7 +2,7 @@ module Mario
   class Move
     attr_accessor :from, :to, :coins
 
-    def initialize(from, to = nil, coins = [])
+    def initialize(from, to = nil, coins = {})
       self.from = from
       self.to = to
       self.coins = coins
