@@ -25,6 +25,10 @@ module Mario
         point.y > -1 && point.y < height
     end
 
+    def can_enter?(p)
+      include?(p) && !block_at?(p)
+    end
+
     def width
       dimensions.x
     end

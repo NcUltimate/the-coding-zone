@@ -1,3 +1,5 @@
+require_relative './move.rb'
+require_relative './pathfinder.rb'
 require_relative './point.rb'
 require_relative './file_reader.rb'
 require_relative './algorithm.rb'
