@@ -29,6 +29,5 @@ func main() {
 	}
 
 	// Board
-	NewPlayer(board).DrawIt()
-	Solve(board)
+	Smart(board)
 }
