@@ -45,10 +45,25 @@ func Smart(b *Board) {
 			////////////////////
 
 			if x == b.W-1 {
-				player := NewPlayer(b)
-				player.eat()
-				player.fall()
-				optimals[x][y] = &Optimal{valid: true, score: player.Score()}
+				p := NewPlayer(b)
+				p.eat()
+				p.fall()
+
+				// Will Jumping Help? (It Won't Hurt)
+				preJumpScore := p.Score()
+				p.Jump()
+
+				switch {
+
+				// Jumping Helps!
+				case p.Score() > preJumpScore:
+					optimals[x][y] = &Optimal{valid: true, score: p.Score(), moves: []int{Jump}}
+
+				// No Need To Jump
+				default:
+					optimals[x][y] = &Optimal{valid: true, score: p.Score()}
+				}
+
 				continue
 			}
 
