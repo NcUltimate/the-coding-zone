@@ -20,8 +20,8 @@ var blocks map[Cell]bool
 var player_start Cell
 
 func main() {
-	file, err := os.Open("../../medium.txt")
-	//file, err := os.Open("../../sample.txt")
+	//file, err := os.Open("../../medium.txt")
+	file, err := os.Open("../../sample.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -64,14 +64,16 @@ func main() {
 		}
 	}
 	end_cell, all_cell_count := play(player_start, 0)
-	//end_cell, all_cell_count := play(Cell{2, 7}, 0)
+	//end_cell, all_cell_count := play(Cell{8, 10}, 0)
 	fmt.Println(end_cell)
 	fmt.Println(all_cell_count)
 }
 
 func play(start_cell Cell, coin_count int) (Cell, []int) {
 	temp_cell := start_cell
-	done_standard_jump := false
+	done_standard_jump := make(map[Cell]bool)
+	done_high_jump := make(map[Cell]bool)
+	done_long_jump := make(map[Cell]bool)
 	num_coins := coin_count
 	if coins[start_cell] {
 		num_coins += 1
@@ -84,40 +86,41 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 	cells := make([]Cell, 0)
 	collected_cells := make([]Cell, 0)
 	i := 0
-	for !moves_finished(temp_cell) {
+	for !moves_finished(temp_cell, done_standard_jump, done_long_jump, done_high_jump) {
 		sub_coins = 0
 		//fmt.Println(temp_cell, " ", can_high_jump(temp_cell))
-		if can_high_jump(temp_cell) {
+		if can_high_jump(temp_cell) && !done_high_jump[temp_cell] {
 			_, temp_end_cell := high_jump(temp_cell, collected_cells)
 			if level_changed(temp_cell, temp_end_cell) {
 				_, sub_cell_count := play(temp_end_cell, num_coins)
 				//fmt.Println("---", temp_end_cell, " ", sub_cell_count)
 				cell_count = append(cell_count, sub_cell_count...)
 			}
+			done_high_jump[temp_cell] = true
 		}
-		if has_atleast_two_coins_above(temp_cell) && !done_standard_jump {
+		if has_atleast_two_coins_above(temp_cell) && !done_standard_jump[temp_cell] {
 			cells, end_cell = standard_jump(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
-
-			done_standard_jump = true
-		} else if should_high_jump(temp_cell) {
+			done_standard_jump[temp_cell] = true
+		} else if should_high_jump(temp_cell) && !done_high_jump[temp_cell] {
 			cells, end_cell = high_jump(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
-			done_standard_jump = true
-		} else if should_long_jump(temp_cell) {
+			done_high_jump[temp_cell] = true
+		} else if should_long_jump(temp_cell) && !done_long_jump[temp_cell] {
 			cells, end_cell = long_jump(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
-			done_standard_jump = false
+			done_long_jump[temp_cell] = true
 		} else {
 			cells, end_cell = standard_move(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
-			done_standard_jump = false
+			//done_standard_jump[temp_cell] = false
 		}
 		collected_cells = append(collected_cells, get_unique_coins(cells)...)
 		collected_cells = get_unique_coins(collected_cells)
 		num_coins += sub_coins
 		temp_cell = end_cell
 		i += 1
+		fmt.Println(temp_cell, " CHJ: ", can_high_jump(temp_cell) && !done_high_jump[temp_cell], " SLJ: ", should_long_jump(temp_cell), " SHJ: ", should_high_jump(temp_cell), " ", has_atleast_two_coins_above(temp_cell) && !done_standard_jump[temp_cell])
 		/*if i == 30 {
 			os.Exit(1)
 		}*/
@@ -129,27 +132,28 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 }
 
 func can_high_jump(cell Cell) bool {
-	max_cell := Cell{cell.row + 3, cell.col + 1}
-	//fmt.Println("IS BLOCK ", " ", max_cell, " ", !is_block(max_cell))
-	if !is_block(max_cell) {
-		//if (is_block(Cell{cell.row, cell.col + 1}) || is_block(Cell{cell.row + 1, cell.col + 1})) && !is_block(Cell{cell.row + 2, cell.col + 1}) {
-		if is_block(Cell{cell.row + 1, cell.col + 1}) {
-			return true
-		}
-		if (is_block(Cell{cell.row, cell.col + 1}) || is_block(Cell{cell.row + 1, cell.col + 1})) {
-			return true
-		}
+	//max_cell := Cell{cell.row + 3, cell.col + 1}
+	//if !is_block(max_cell) {
+	if is_block(Cell{cell.row + 1, cell.col + 1}) {
+		return true
 	}
+	if (is_block(Cell{cell.row, cell.col + 1}) || is_block(Cell{cell.row + 1, cell.col + 1})) {
+		return true
+	}
+	//}
 	return false
 }
 
-/*
 func can_long_jump(cell Cell) bool {
-	max_cell := Cell{cell.row + 1, cell.col + 3}
 	diagonal_cell := Cell{cell.row + 1, cell.col + 1}
-	if is_block(Cell{cell.row, cell.col + 1}) {
+	if (diagonal_cell.row >= rows) || (diagonal_cell.col >= cols) {
+		return false
 	}
-}*/
+	if is_block(diagonal_cell) {
+		return false
+	}
+	return true
+}
 
 func should_long_jump(cell Cell) bool {
 	//max_cell := Cell{cell.row + 1, cell.col + 3}
@@ -261,25 +265,36 @@ func standard_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 func high_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 	temp_cell := cell
 	return_cell := make([]Cell, 0)
+	fmt.Println("1")
 	for i := 0; i < 2 && temp_cell.row < rows; i++ {
+		fmt.Println("2")
 		temp_cell = Cell{temp_cell.row + 1, temp_cell.col}
 		if coins[temp_cell] && !in_array(temp_cell, collected_cells) {
+			fmt.Println("3")
 			return_cell = append(return_cell, temp_cell)
 			collected_cells = append(collected_cells, temp_cell)
 		}
 		if blocks[temp_cell] {
-			return return_cell, Cell{temp_cell.row - 1, temp_cell.col}
+			falling_return_cell, falling_jump_cell := falling_move(return_cell, Cell{temp_cell.row - 1, temp_cell.col}, collected_cells)
+			return_cell = append(return_cell, falling_return_cell...)
+			fmt.Println("4- ", i, " cell: ", cell, " temp_cell: ", temp_cell, " falling_ :", falling_jump_cell)
+			return return_cell, falling_jump_cell
 		}
 	}
 	diagonal_cell := Cell{temp_cell.row + 1, temp_cell.col + 1}
+
+	fmt.Println("5")
 	//fmt.Println("Diagonal: ", diagonal_cell)
 	if coins[diagonal_cell] && !in_array(diagonal_cell, collected_cells) {
+		fmt.Println("6")
 		temp_cell = diagonal_cell
 		return_cell = append(return_cell, temp_cell)
 		collected_cells = append(collected_cells, temp_cell)
 	}
 	if blocks[diagonal_cell] {
-		return return_cell, Cell{temp_cell.row - 1, temp_cell.col}
+		fmt.Println("7")
+		temp_cell = Cell{temp_cell.row - 1, temp_cell.col}
+		//return return_cell, Cell{temp_cell.row - 1, temp_cell.col}
 	} else {
 		temp_cell = diagonal_cell
 	}
@@ -366,9 +381,9 @@ func can_move_horizontally(cell Cell) bool {
 	return true
 }
 
-func moves_finished(cell Cell) bool {
+func moves_finished(cell Cell, done_standard_jump map[Cell]bool, done_long_jump map[Cell]bool, done_high_jump map[Cell]bool) bool {
 	//fmt.Println("Horizontal ", can_move_horizontally(cell), " Up: ", can_move_up(cell), " Cell: ", cell)
-	if can_move_horizontally(cell) || can_move_up(cell) {
+	if can_move_horizontally(cell) || can_move_up(cell) || (can_long_jump(cell) && !done_long_jump[cell]) || (can_high_jump(cell) && done_high_jump[cell]) {
 		return false
 	}
 	return true
