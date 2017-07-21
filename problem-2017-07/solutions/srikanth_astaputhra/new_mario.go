@@ -64,9 +64,18 @@ func main() {
 		}
 	}
 	end_cell, all_cell_count := play(player_start, 0)
-	//end_cell, all_cell_count := play(Cell{8, 10}, 0)
 	fmt.Println(end_cell)
-	fmt.Println(all_cell_count)
+	fmt.Println(get_largest_num(all_cell_count))
+}
+
+func get_largest_num(all_cell_count []int) int {
+	n := all_cell_count[0]
+	for _, v := range all_cell_count {
+		if v > n {
+			n = v
+		}
+	}
+	return n
 }
 
 func play(start_cell Cell, coin_count int) (Cell, []int) {
@@ -77,7 +86,6 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 	num_coins := coin_count
 	if coins[start_cell] {
 		num_coins += 1
-		fmt.Println("Added ", start_cell, " ", num_coins)
 		coins[start_cell] = false
 	}
 	sub_coins := 0
@@ -86,19 +94,21 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 	cells := make([]Cell, 0)
 	collected_cells := make([]Cell, 0)
 	i := 0
-	for !moves_finished(temp_cell, done_standard_jump, done_long_jump, done_high_jump) {
+	for !moves_finished(temp_cell, done_standard_jump, done_long_jump, done_high_jump, collected_cells) {
 		sub_coins = 0
-		//fmt.Println(temp_cell, " ", can_high_jump(temp_cell))
+		if has_atleast_two_coins_above(temp_cell, collected_cells) && done_standard_jump[temp_cell] {
+			done_standard_jump[temp_cell] = false
+		}
 		if can_high_jump(temp_cell) && !done_high_jump[temp_cell] {
 			_, temp_end_cell := high_jump(temp_cell, collected_cells)
 			if level_changed(temp_cell, temp_end_cell) {
 				_, sub_cell_count := play(temp_end_cell, num_coins)
-				//fmt.Println("---", temp_end_cell, " ", sub_cell_count)
 				cell_count = append(cell_count, sub_cell_count...)
 			}
 			done_high_jump[temp_cell] = true
 		}
-		if has_atleast_two_coins_above(temp_cell) && !done_standard_jump[temp_cell] {
+
+		if has_atleast_two_coins_above(temp_cell, collected_cells) && !done_standard_jump[temp_cell] {
 			cells, end_cell = standard_jump(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
 			done_standard_jump[temp_cell] = true
@@ -113,34 +123,25 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 		} else {
 			cells, end_cell = standard_move(temp_cell, collected_cells)
 			sub_coins = len(get_unique_coins(cells))
-			//done_standard_jump[temp_cell] = false
 		}
 		collected_cells = append(collected_cells, get_unique_coins(cells)...)
 		collected_cells = get_unique_coins(collected_cells)
 		num_coins += sub_coins
 		temp_cell = end_cell
 		i += 1
-		fmt.Println(temp_cell, " CHJ: ", can_high_jump(temp_cell) && !done_high_jump[temp_cell], " SLJ: ", should_long_jump(temp_cell), " SHJ: ", should_high_jump(temp_cell), " ", has_atleast_two_coins_above(temp_cell) && !done_standard_jump[temp_cell])
-		/*if i == 30 {
-			os.Exit(1)
-		}*/
 	}
 
-	fmt.Println(collected_cells)
 	cell_count = append(cell_count, num_coins)
 	return temp_cell, cell_count
 }
 
 func can_high_jump(cell Cell) bool {
-	//max_cell := Cell{cell.row + 3, cell.col + 1}
-	//if !is_block(max_cell) {
 	if is_block(Cell{cell.row + 1, cell.col + 1}) {
 		return true
 	}
 	if (is_block(Cell{cell.row, cell.col + 1}) || is_block(Cell{cell.row + 1, cell.col + 1})) {
 		return true
 	}
-	//}
 	return false
 }
 
@@ -156,8 +157,11 @@ func can_long_jump(cell Cell) bool {
 }
 
 func should_long_jump(cell Cell) bool {
-	//max_cell := Cell{cell.row + 1, cell.col + 3}
 	diagonal_cell := Cell{cell.row + 1, cell.col + 1}
+	forward_cell := Cell{cell.row, cell.col + 1}
+	if is_block(Cell{forward_cell.row, forward_cell.col + 1}) && is_block(Cell{forward_cell.row + 1, forward_cell.col}) {
+		return true
+	}
 	if is_block(Cell{cell.row, cell.col + 1}) {
 		if !is_block(diagonal_cell) {
 			return true
@@ -239,7 +243,7 @@ func standard_move(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 func standard_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 	return_cell := make([]Cell, 0)
 	temp_cell := cell
-	if can_standard_jump(temp_cell) {
+	if can_standard_jump(temp_cell, collected_cells) {
 		for i := 0; i < 2; i++ {
 			temp_cell = Cell{temp_cell.row + 1, temp_cell.col}
 			if coins[temp_cell] && !in_array(temp_cell, collected_cells) {
@@ -247,7 +251,7 @@ func standard_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 				collected_cells = append(collected_cells, temp_cell)
 			}
 		}
-	} else if has_one_coin_above(temp_cell) {
+	} else if has_one_coin_above(temp_cell, collected_cells) {
 		temp_cell = Cell{temp_cell.row + 1, temp_cell.col}
 		if coins[temp_cell] && !in_array(temp_cell, collected_cells) {
 			return_cell = append(return_cell, temp_cell)
@@ -265,36 +269,27 @@ func standard_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 func high_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 	temp_cell := cell
 	return_cell := make([]Cell, 0)
-	fmt.Println("1")
 	for i := 0; i < 2 && temp_cell.row < rows; i++ {
-		fmt.Println("2")
 		temp_cell = Cell{temp_cell.row + 1, temp_cell.col}
 		if coins[temp_cell] && !in_array(temp_cell, collected_cells) {
-			fmt.Println("3")
 			return_cell = append(return_cell, temp_cell)
 			collected_cells = append(collected_cells, temp_cell)
 		}
 		if blocks[temp_cell] {
 			falling_return_cell, falling_jump_cell := falling_move(return_cell, Cell{temp_cell.row - 1, temp_cell.col}, collected_cells)
 			return_cell = append(return_cell, falling_return_cell...)
-			fmt.Println("4- ", i, " cell: ", cell, " temp_cell: ", temp_cell, " falling_ :", falling_jump_cell)
 			return return_cell, falling_jump_cell
 		}
 	}
 	diagonal_cell := Cell{temp_cell.row + 1, temp_cell.col + 1}
 
-	fmt.Println("5")
-	//fmt.Println("Diagonal: ", diagonal_cell)
 	if coins[diagonal_cell] && !in_array(diagonal_cell, collected_cells) {
-		fmt.Println("6")
 		temp_cell = diagonal_cell
 		return_cell = append(return_cell, temp_cell)
 		collected_cells = append(collected_cells, temp_cell)
 	}
 	if blocks[diagonal_cell] {
-		fmt.Println("7")
 		temp_cell = Cell{temp_cell.row - 1, temp_cell.col}
-		//return return_cell, Cell{temp_cell.row - 1, temp_cell.col}
 	} else {
 		temp_cell = diagonal_cell
 	}
@@ -333,41 +328,48 @@ func long_jump(cell Cell, collected_cells []Cell) ([]Cell, Cell) {
 	return return_cell, falling_jump_cell
 }
 
-func can_standard_jump(cell Cell) bool {
-	if (is_block(Cell{cell.row, cell.col + 1})) {
+func can_standard_jump(cell Cell, collected_cells []Cell) bool {
+	if (is_block(Cell{cell.row + 1, cell.col})) {
 		return false
 	}
-	if has_atleast_two_coins_above(cell) {
+	if has_atleast_two_coins_above(cell, collected_cells) {
 		return true
 	}
 	return false
 }
 
-func has_one_coin_above(cell Cell) bool {
-	if (coins[Cell{cell.row + 1, cell.col}]) {
+func has_one_coin_above(cell Cell, collected_coins []Cell) bool {
+	if (coins[Cell{cell.row + 1, cell.col}] && !in_array(Cell{cell.row + 1, cell.col}, collected_coins)) {
 		return true
 	}
 	return false
 }
 
-func has_atleast_two_coins_above(cell Cell) bool {
-	if (has_one_coin_above(cell) || coins[Cell{cell.row + 2, cell.col}]) {
-		return true
+func has_atleast_two_coins_above(cell Cell, collected_coins []Cell) bool {
+	c2 := Cell{cell.row + 2, cell.col}
+	c1 := Cell{cell.row + 1, cell.col}
+	if is_block(c1) {
+		return false
+	}
+	if has_one_coin_above(cell, collected_coins) || coins[c2] {
+		if !in_array(c2, collected_coins) {
+			return true
+		}
 	}
 	return false
 }
 
-func can_move_up(cell Cell) bool {
-	//fmt.Println("V: ", cell, " ", Cell{cell.row + 1, cell.col}, " ", !can_high_jump(cell), " ", !coins[Cell{cell.row + 1, cell.col}])
+func can_move_up(cell Cell, collected_coins []Cell) bool {
 	if cell.row >= rows {
 		return false
 	}
 	if blocks[Cell{cell.row + 1, cell.col}] {
 		return false
 	}
-	if !coins[Cell{cell.row + 1, cell.col}] {
+	if !has_atleast_two_coins_above(cell, collected_coins) {
 		return false
 	}
+
 	return true
 }
 
@@ -381,9 +383,8 @@ func can_move_horizontally(cell Cell) bool {
 	return true
 }
 
-func moves_finished(cell Cell, done_standard_jump map[Cell]bool, done_long_jump map[Cell]bool, done_high_jump map[Cell]bool) bool {
-	//fmt.Println("Horizontal ", can_move_horizontally(cell), " Up: ", can_move_up(cell), " Cell: ", cell)
-	if can_move_horizontally(cell) || can_move_up(cell) || (can_long_jump(cell) && !done_long_jump[cell]) || (can_high_jump(cell) && done_high_jump[cell]) {
+func moves_finished(cell Cell, done_standard_jump map[Cell]bool, done_long_jump map[Cell]bool, done_high_jump map[Cell]bool, collected_coins []Cell) bool {
+	if can_move_horizontally(cell) || can_move_up(cell, collected_coins) || (can_long_jump(cell) && !done_long_jump[cell]) || (can_high_jump(cell) && !done_high_jump[cell]) {
 		return false
 	}
 	return true
@@ -393,7 +394,6 @@ func get_unique_coins(cells []Cell) []Cell {
 	unique_cells := make([]Cell, 0)
 	for _, v := range cells {
 		if !in_array(v, unique_cells) {
-			////fmt.Println("Adding ", v)
 			unique_cells = append(unique_cells, v)
 		}
 	}
@@ -407,19 +407,6 @@ func in_array(cell Cell, cell_elements []Cell) bool {
 		}
 	}
 	return false
-}
-
-func clear_coins(cells []Cell) int {
-	count := 0
-	for _, v := range cells {
-		if coins[v] {
-			//fmt.Println("Adding: ", v)
-			coins[v] = false
-			count += 1
-		}
-	}
-	//fmt.Println("Count: ", count)
-	return count
 }
 
 func is_block(cell Cell) bool {
