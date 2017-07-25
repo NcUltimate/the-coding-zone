@@ -32,6 +32,7 @@ type Player struct {
 	X     int
 	Y     int
 	Coins map[int]bool
+	Touch map[int]bool
 	Path  []Space
 }
 
@@ -42,6 +43,7 @@ func NewPlayer(b *Board) *Player {
 		X:     b.StartX,
 		Y:     b.StartY,
 		Coins: make(map[int]bool),
+		Touch: make(map[int]bool),
 	}
 }
 
@@ -249,6 +251,10 @@ func (p *Player) touch() {
 	coin := p.eat()
 	space := Space{p.X, p.Y, coin}
 	p.Path = append(p.Path, space)
+
+	// Compute ID Of Space
+	spaceID := p.Y*p.B.W + p.X
+	p.Touch[spaceID] = true
 }
 
 // Display
@@ -274,12 +280,9 @@ func (p *Player) wall(dX, dY int) bool {
 
 // Touched returns true of the space was touched
 func (p *Player) touched(x, y int) bool {
-	for _, s := range p.Path {
-		if s.X == x && s.Y == y {
-			return true
-		}
-	}
-	return false
+	id := y * p.B.W + x
+	_, ok := p.Touch[id]
+	return ok
 }
 
 // DrawIt draws the board with touched moves!

@@ -217,4 +217,4 @@ class MiniMario
   end
 end
 
-MiniMario.new('input.txt')
+MiniMario.new(ARGV[0])
