@@ -2,26 +2,32 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
-var rows, cols int
+var width, height int
 
 type Cell struct {
-	row int
-	col int
+	x int
+	y int
+}
+
+type Result struct {
+	cell      Cell
+	coins     int
+	end_cells []Cell
 }
 
 var coins map[Cell]bool
 var blocks map[Cell]bool
 var player_start Cell
+var resultant_coins map[int]map[int][]Cell
+var coin_result map[Cell]map[string]Result
 
 func main() {
-	//file, err := os.Open("../../medium.txt")
 	file, err := os.Open("../../sample.txt")
 	if err != nil {
 		fmt.Println(err)
@@ -29,6 +35,7 @@ func main() {
 	defer file.Close()
 	coins = make(map[Cell]bool)
 	blocks = make(map[Cell]bool)
+	coin_result = make(map[Cell]map[string]Result)
 	input := bufio.NewScanner(file)
 
 	i := 0
@@ -40,16 +47,16 @@ func main() {
 		}
 
 		if i == 1 {
-			rows, _ = strconv.Atoi(strings.Fields(indata)[0])
-			cols, _ = strconv.Atoi(strings.Fields(indata)[1])
+			width, _ = strconv.Atoi(strings.Fields(indata)[0])
+			height, _ = strconv.Atoi(strings.Fields(indata)[1])
 		} else if i == 2 {
-			t_row, _ := strconv.Atoi(strings.Fields(indata)[0])
-			t_col, _ := strconv.Atoi(strings.Fields(indata)[1])
-			player_start = Cell{t_row, t_col}
+			t_x, _ := strconv.Atoi(strings.Fields(indata)[0])
+			t_y, _ := strconv.Atoi(strings.Fields(indata)[1])
+			player_start = Cell{t_x, t_y}
 		} else {
-			t_row, _ := strconv.Atoi(strings.Fields(indata)[0])
-			t_col, _ := strconv.Atoi(strings.Fields(indata)[1])
-			t_cell := Cell{row: t_row, col: t_col}
+			t_x, _ := strconv.Atoi(strings.Fields(indata)[0])
+			t_y, _ := strconv.Atoi(strings.Fields(indata)[1])
+			t_cell := Cell{t_x, t_y}
 			type_cell := strings.Fields(indata)[2]
 
 			if type_cell == "C" {
@@ -64,284 +71,229 @@ func main() {
 			}
 		}
 	}
-	fmt.Println(get_max_move(player_start.row, player_start.col))
+	play(player_start, 0)
+	resultant_coins = make(map[int]map[int][]Cell, 0)
+	for i := player_start.x; i < width; i++ {
+		resultant_coins[i] = make(map[int][]Cell)
+	}
+	fmt.Println()
+	find_coins(player_start)
+	/*for k, v := range coin_result {
+		fmt.Println(k, " ", v["standard_jump"])
+	}*/
 }
 
-func get_max_move(x, y int) int {
-	num_coins := 0
-	for !moves_finished(Cell{x, y}) {
-		sub_s_move := 0
-
-		sub_h_jump := 0
-		sub_l_jump := 0
-		sub_coins := 0
-
-		s_move_cells, s_move_end_cell := make([]Cell, 0), Cell{x + 1, y}
-		if !blocks[Cell{x + 1, y}] {
-			s_move_cells, s_move_end_cell, _ = standard_move(x, y)
-		}
-
-		s_jump_cells, s_jump_end_cell, _ := standard_jump(x, y)
-		h_jump_cells, h_jump_end_cell, _ := high_jump(x, y)
-		l_jump_cells, l_jump_end_cell, _ := long_jump(x, y)
-
-		s_move_num := len(s_move_cells)
-		s_jump_num := len(s_jump_cells)
-		h_jump_num := len(h_jump_cells)
-		l_jump_num := len(l_jump_cells)
-
-		moves_coins := make(map[string]int)
-		moves_coins["standard_move"] = s_move_num
-		moves_coins["standard_jump"] = s_jump_num
-		moves_coins["high_jump"] = h_jump_num
-		moves_coins["long_jump"] = l_jump_num
-
-		move := decide_move(moves_coins)
-		switch move {
-		case "standard_move":
-			if s_move_num > 0 {
-				clear_coins(s_move_cells)
+func find_coins(start_from Cell) {
+	keys := make([]Cell, 0)
+	for i := start_from.x; i < width; i++ {
+		for j := start_from.y; j < height; j++ {
+			if len(coin_result[Cell{i, j}]) > 0 {
+				keys = append(keys, Cell{i, j})
 			}
-			x, y = s_move_end_cell.row, s_move_end_cell.col
-			sub_coins += s_move_num
-		case "standard_jump":
-			if s_jump_num > 0 {
-				clear_coins(s_jump_cells)
-			}
-			x, y = s_jump_end_cell.row, s_move_end_cell.col
-			sub_coins += s_jump_num
-		case "high_jump":
-			if h_jump_num > 0 {
-				clear_coins(h_jump_cells)
-			}
-			x, y = h_jump_end_cell.row, s_move_end_cell.col
-			sub_coins += h_jump_num
-		case "long_jump":
-			if l_jump_num > 0 {
-				clear_coins(l_jump_cells)
-			}
-			x, y = l_jump_end_cell.row, s_move_end_cell.col
-			sub_coins += l_jump_num
 		}
-		if s_move_end_cell.row != x && s_move_end_cell.col != y && !blocks[Cell{x + 1, y}] {
-			sub_s_move = get_max_move(s_move_end_cell.row, s_move_end_cell.col)
-		}
-		if h_jump_end_cell.row != x && h_jump_end_cell.col != y {
-			sub_h_jump = get_max_move(h_jump_end_cell.row, h_jump_end_cell.col)
-		}
-		if l_jump_end_cell.row != x && l_jump_end_cell.col != y && !blocks[Cell{l_jump_end_cell.row + 1, l_jump_end_cell.col + 1}] {
-			sub_l_jump = get_max_move(l_jump_end_cell.row, l_jump_end_cell.col)
-		}
-
-		largest_coins := 0
-		if largest_coins < sub_coins {
-			largest_coins = sub_coins
-		}
-		if largest_coins < sub_s_move {
-			largest_coins = sub_s_move
-		}
-		if largest_coins < sub_h_jump {
-			largest_coins = sub_h_jump
-		}
-		if largest_coins < sub_l_jump {
-			largest_coins = sub_l_jump
-		}
-		num_coins += largest_coins
 	}
-	if num_coins > 0 {
-		fmt.Println("----", num_coins)
+	moves := [4]string{"high_jump", "standard_move", "standard_jump", "long_jump"}
+	for _, cell := range keys {
+		//result_map := coin_result[cell]
+		for _, move := range moves {
+			val := coin_result[cell][move]
+			if len(resultant_coins[val.cell.x][val.cell.y]) > 0 {
+				temp := get_unique_coins(append(resultant_coins[cell.x][cell.y], val.end_cells...))
+				if len(temp) > len(resultant_coins[val.cell.x][val.cell.y]) {
+					resultant_coins[val.cell.x][val.cell.y] = temp
+				} /*else {
+				}*/
+			} else {
+				resultant_coins[val.cell.x][val.cell.y] = get_unique_coins(append(resultant_coins[cell.x][cell.y], val.end_cells...))
+			}
+		}
 	}
-	return num_coins
+
+	num := 0
+	for _, v := range keys {
+		if len(resultant_coins[v.x][v.y]) > num {
+			num = len(resultant_coins[v.x][v.y])
+		}
+	}
+	fmt.Println(num)
 }
 
-func moves_finished(cell Cell) bool {
-	below_cell := Cell{cell.row - 1, cell.col}
-	forward_cell := Cell{cell.row, cell.col + 1}
-	upward_cell := Cell{cell.row + 1, cell.col}
-	above_upward_cell := Cell{cell.row + 2, cell.col}
-	if cell.row+1 >= rows {
-		return true
+func get_unique_coins(cells []Cell) []Cell {
+	unique_cells := make([]Cell, 0)
+	for _, v := range cells {
+		if !in_array(v, unique_cells) {
+			unique_cells = append(unique_cells, v)
+		}
 	}
-	if coins[upward_cell] || coins[above_upward_cell] {
-		return false
-	}
-	if blocks[below_cell] || blocks[forward_cell] || blocks[upward_cell] {
-		return false
+	return unique_cells
+}
+
+func in_array(cell Cell, cell_elements []Cell) bool {
+	for _, cell_element := range cell_elements {
+		if cell.x == cell_element.x && cell.y == cell_element.y {
+			return true
+		}
 	}
 	return false
 }
 
-func clear_coins(cells []Cell) {
-	for _, v := range cells {
-		coins[v] = false
-	}
-}
+func play(start_cell Cell, coin_count int) (Cell, []int) {
+	temp_cell := start_cell
+	coins := make([]int, 0)
+	for i := start_cell.x; i < width; i++ {
+		//diagonal_cell := Cell{temp_cell.x + 1, temp_cell.y + 1}
+		temp_cell = Cell{i, temp_cell.y}
+		_, temp_cell = falling_move(temp_cell)
+		sm_cells, sm_end_cell := standard_move(temp_cell)
+		sj_cells, sj_end_cell := standard_jump(temp_cell)
+		hj_cells, hj_end_cell := high_jump(temp_cell)
+		lj_cells, lj_end_cell := long_jump(temp_cell)
+		sm_result := Result{sm_end_cell, len(sm_cells), sm_cells}
+		sj_result := Result{sj_end_cell, len(sj_cells), sj_cells}
+		hj_result := Result{hj_end_cell, len(hj_cells), hj_cells}
+		lj_result := Result{lj_end_cell, len(lj_cells), lj_cells}
 
-func decide_move(moves map[string]int) string {
-	return_string := "standard_move"
-	if moves[return_string] < moves["standard_jump"] {
-		return_string = "standard_jump"
-	}
-	if moves[return_string] < moves["high_jump"] {
-		return_string = "high_jump"
-	}
-	if moves[return_string] < moves["long_jump"] {
-		return_string = "long_jump"
-	}
+		result_collection := make(map[string]Result)
+		result_collection["standard_move"] = sm_result
+		result_collection["standard_jump"] = sj_result
+		result_collection["high_jump"] = hj_result
+		result_collection["long_jump"] = lj_result
+		coin_result[temp_cell] = result_collection
 
-	return return_string
-}
-
-func falling_move(jump_cell Cell, return_cell []Cell) ([]Cell, Cell, error) {
-	for jump_cell.col >= 0 {
-		if coins[jump_cell] {
-			return_cell = append(return_cell, jump_cell)
-		}
-		if blocks[jump_cell] {
-			return return_cell, Cell{jump_cell.row, jump_cell.col + 1}, errors.New("Encountered block high_jump")
-		}
-		if jump_cell.col == 0 {
-			return return_cell, jump_cell, nil
-		}
-		jump_cell = Cell{row: jump_cell.row, col: jump_cell.col - 1}
-	}
-	if jump_cell.col > 0 {
-		return return_cell, jump_cell, nil
-	}
-	return return_cell, Cell{jump_cell.row, 0}, nil
-}
-
-func standard_move(x, y int) ([]Cell, Cell, error) {
-	fmt.Println("standard_move ", x, y)
-	s_move_cell := Cell{x + 1, y}
-	return_cell := make([]Cell, 0)
-	if x == rows {
-		return return_cell, Cell{x, y}, nil
-	}
-	if coins[s_move_cell] {
-		return_cell = append(return_cell, s_move_cell)
-	}
-	if blocks[s_move_cell] == true {
-		return return_cell, Cell{x, y}, errors.New("Encountered block stanndard_move")
-	}
-	falling_return_cell, jump_cell, falling_err := falling_move(Cell{s_move_cell.row, s_move_cell.col - 1}, make([]Cell, 0))
-	if falling_err == nil {
-		return_cell = append(return_cell, falling_return_cell...)
-		return return_cell, jump_cell, nil
-	}
-
-	return return_cell, Cell{x + 1, 0}, nil
-}
-
-func standard_jump(x, y int) ([]Cell, Cell, error) {
-	fmt.Println("standard_jump ", x, y)
-	return_cell, end_cell, err := s_jump(x, y)
-	if err == nil {
-		jump_cell := Cell{end_cell.row, end_cell.col - 1}
-		falling_return_cell, jump_cell, falling_err := falling_move(Cell{end_cell.row, end_cell.col - 1}, make([]Cell, 0))
-		if falling_err == nil {
-			return_cell = append(return_cell, falling_return_cell...)
-			return return_cell, jump_cell, nil
-		}
-	} else {
-		return return_cell, end_cell, err
-	}
-	return return_cell, Cell{x, y}, nil
-}
-
-func s_jump(x, y int) ([]Cell, Cell, error) {
-	s_jump_cell := Cell{x, y + 1}
-	return_cell := make([]Cell, 0)
-	for x <= s_jump_cell.row && y+2 <= s_jump_cell.col {
-		if coins[s_jump_cell] {
-			return_cell = append(return_cell, s_jump_cell)
-		}
-		if blocks[s_jump_cell] == true {
-			return return_cell, Cell{s_jump_cell.row, s_jump_cell.col - 1}, errors.New("Encountered block standard_jump")
-		}
-		s_jump_cell = Cell{s_jump_cell.row, s_jump_cell.col + 1}
-	}
-	return return_cell, s_jump_cell, nil
-}
-
-func high_jump(x, y int) ([]Cell, Cell, error) {
-	fmt.Println("high_jump ", x, y)
-	h_jump_cell := Cell{x + 1, y + 3}
-	return_cell, end_cell, err := s_jump(x, y)
-	if err == nil {
-		if coins[h_jump_cell] {
-			return_cell = append(return_cell, h_jump_cell)
-		}
-		if blocks[h_jump_cell] {
-			fmt.Println("Encountered block high_jump")
-			h_jump_cell = Cell{row: h_jump_cell.row, col: h_jump_cell.col - 1}
-			for h_jump_cell.col >= 0 {
-				if coins[h_jump_cell] {
-					return_cell = append(return_cell, h_jump_cell)
-				}
-				if blocks[h_jump_cell] {
-					return return_cell, Cell{h_jump_cell.row, h_jump_cell.col + 1}, errors.New("Encountered block high_jump")
-				}
-				if h_jump_cell.col == 0 {
-					return return_cell, h_jump_cell, nil
-				}
-				h_jump_cell = Cell{h_jump_cell.row, h_jump_cell.col - 1}
+		if hj_end_cell.y != temp_cell.y && hj_end_cell.y != 0 {
+			if _, ok := coin_result[hj_end_cell]; !ok {
+				play(hj_end_cell, hj_result.coins+coin_count)
 			}
-			return return_cell, h_jump_cell, errors.New("Encountered block high_jump")
 		}
-	} else {
-		return return_cell, end_cell, err
+		if lj_end_cell.y != temp_cell.y && lj_end_cell.y != 0 {
+			if _, ok := coin_result[lj_end_cell]; !ok {
+				play(lj_end_cell, lj_result.coins+coin_count)
+			}
+		}
 	}
-	h_jump_cell = Cell{row: h_jump_cell.row, col: h_jump_cell.col - 1}
-	for h_jump_cell.col >= 0 {
-		if coins[h_jump_cell] {
-			return_cell = append(return_cell, h_jump_cell)
-		}
-		if blocks[h_jump_cell] {
-			return return_cell, Cell{h_jump_cell.row, h_jump_cell.col + 1}, errors.New("Encountered block high_jump")
-		}
-		if h_jump_cell.col == 0 {
-			return return_cell, h_jump_cell, nil
-		}
-		h_jump_cell = Cell{h_jump_cell.row, h_jump_cell.col - 1}
-	}
-	return return_cell, h_jump_cell, nil
+	//sort.Sort(keys)
+	return temp_cell, coins
 }
 
-func long_jump(x, y int) ([]Cell, Cell, error) {
-	fmt.Println("long_jump ", x, y)
-	l_jump_cell := Cell{x + 1, y + 1}
-	return_cell := make([]Cell, 0)
-	if coins[l_jump_cell] {
-		return_cell = append(return_cell, l_jump_cell)
+func falling_move(cell Cell) ([]Cell, Cell) {
+	temp_cell := cell
+	coins_cell := make([]Cell, 0)
+	for temp_cell.y > 0 {
+		if blocks[Cell{temp_cell.x, temp_cell.y - 1}] {
+			return coins_cell, temp_cell
+		}
+		temp_cell = Cell{temp_cell.x, temp_cell.y - 1}
+		if coins[temp_cell] {
+			coins_cell = append(coins_cell, temp_cell)
+		}
+		if temp_cell.y == 0 {
+			return coins_cell, temp_cell
+		}
 	}
-	if blocks[l_jump_cell] {
-		return return_cell, Cell{l_jump_cell.row - 1, l_jump_cell.col - 1}, errors.New("Encountered block long_jump")
+	return coins_cell, temp_cell
+}
+
+func standard_move(cell Cell) ([]Cell, Cell) {
+	temp_cell := Cell{cell.x + 1, cell.y}
+	coins_cell := make([]Cell, 0)
+	if blocks[temp_cell] || temp_cell.x == width {
+		return coins_cell, cell
 	}
-	x = x + 1
-	y = y + 1
-	for l_jump_cell.row >= x+2 && l_jump_cell.col >= y {
-		if coins[l_jump_cell] {
-			return_cell = append(return_cell, l_jump_cell)
-		}
-		if blocks[l_jump_cell] {
-			return return_cell, Cell{l_jump_cell.row - 1, l_jump_cell.col}, errors.New("Encountered block long_jump")
-		}
-		l_jump_cell = Cell{l_jump_cell.row + 1, l_jump_cell.col}
+	if coins[temp_cell] {
+		coins_cell = append(coins_cell, temp_cell)
 	}
-	l_jump_cell = Cell{row: l_jump_cell.row, col: l_jump_cell.col - 1}
-	for l_jump_cell.col >= 0 {
-		if coins[l_jump_cell] {
-			return_cell = append(return_cell, l_jump_cell)
+	temp_coins_cell := make([]Cell, 0)
+	temp_coins_cell, temp_cell = falling_move(temp_cell)
+	coins_cell = append(coins_cell, temp_coins_cell...)
+	return get_unique_coins(coins_cell), temp_cell
+}
+
+func standard_jump(cell Cell) ([]Cell, Cell) {
+	temp_cell := cell
+	coins_cell := make([]Cell, 0)
+
+	y := cell.y + 2
+
+	for y > temp_cell.y {
+		if blocks[Cell{temp_cell.x, temp_cell.y + 1}] {
+			return coins_cell, cell
 		}
-		if blocks[l_jump_cell] {
-			return return_cell, Cell{l_jump_cell.row, l_jump_cell.col + 1}, errors.New("Encountered block long_jump")
+		temp_cell = Cell{temp_cell.x, temp_cell.y + 1}
+		if coins[temp_cell] {
+			coins_cell = append(coins_cell, temp_cell)
 		}
-		if l_jump_cell.col == 0 {
-			return return_cell, l_jump_cell, nil
+	}
+	return coins_cell, cell
+}
+
+func high_jump(cell Cell) ([]Cell, Cell) {
+	temp_cell := cell
+	coins_cell := make([]Cell, 0)
+
+	y := cell.y + 2
+	for y > temp_cell.y && temp_cell.y < height {
+		if blocks[Cell{temp_cell.x, temp_cell.y + 1}] || temp_cell.y+1 == height {
+			temp_coins_cell := make([]Cell, 0)
+			temp_coins_cell, temp_cell = falling_move(temp_cell)
+			coins_cell = append(coins_cell, temp_coins_cell...)
+			return coins_cell, temp_cell
 		}
-		l_jump_cell = Cell{row: l_jump_cell.row, col: l_jump_cell.col - 1}
+		temp_cell = Cell{temp_cell.x, temp_cell.y + 1}
+		if coins[temp_cell] {
+			coins_cell = append(coins_cell, temp_cell)
+		}
 	}
 
-	return return_cell, l_jump_cell, nil
+	diagonal_cell := Cell{temp_cell.x + 1, temp_cell.y + 1}
+	if diagonal_cell.x == width {
+		diagonal_cell.x -= 1
+	}
+	if diagonal_cell.y == height {
+		diagonal_cell.y -= 1
+	}
+	if blocks[diagonal_cell] {
+		return coins_cell, cell
+	}
+	temp_cell = diagonal_cell
+	if coins[temp_cell] {
+		coins_cell = append(coins_cell, temp_cell)
+	}
+	temp_coins_cell := make([]Cell, 0)
+	temp_coins_cell, temp_cell = falling_move(temp_cell)
+	coins_cell = append(coins_cell, temp_coins_cell...)
+	return coins_cell, temp_cell
+}
+
+func long_jump(cell Cell) ([]Cell, Cell) {
+	temp_cell := cell
+	coins_cell := make([]Cell, 0)
+
+	diagonal_cell := Cell{temp_cell.x + 1, temp_cell.y + 1}
+	if blocks[diagonal_cell] || diagonal_cell.x == width || diagonal_cell.x == height {
+		return coins_cell, temp_cell
+	}
+	temp_cell = diagonal_cell
+
+	if coins[temp_cell] {
+		coins_cell = append(coins_cell, temp_cell)
+	}
+
+	x := temp_cell.x + 2
+	for x > temp_cell.x && temp_cell.x < width {
+		if blocks[Cell{temp_cell.x + 1, temp_cell.y}] || temp_cell.x+1 == width {
+			temp_coins_cell := make([]Cell, 0)
+			temp_coins_cell, temp_cell = falling_move(temp_cell)
+			coins_cell = append(coins_cell, temp_coins_cell...)
+			return coins_cell, temp_cell
+		}
+		temp_cell = Cell{temp_cell.x + 1, temp_cell.y}
+		if coins[temp_cell] {
+			coins_cell = append(coins_cell, temp_cell)
+		}
+	}
+
+	temp_coins_cell := make([]Cell, 0)
+	temp_coins_cell, temp_cell = falling_move(temp_cell)
+	coins_cell = append(coins_cell, temp_coins_cell...)
+	return coins_cell, temp_cell
 }
