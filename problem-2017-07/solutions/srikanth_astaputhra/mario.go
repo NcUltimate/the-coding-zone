@@ -28,7 +28,11 @@ var resultant_coins map[int]map[int][]Cell
 var coin_result map[Cell]map[string]Result
 
 func main() {
-	file, err := os.Open("../../sample.txt")
+	if len(os.Args) < 2 {
+		fmt.Println("Should pass the file name as argument")
+		return
+	}
+	file, err := os.Open(os.Args[1])
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -78,11 +82,11 @@ func main() {
 	}
 	fmt.Println()
 	find_coins(player_start)
-	/*for k, v := range coin_result {
-		fmt.Println(k, " ", v["standard_jump"])
-	}*/
 }
 
+/**
+* This method calculates the maximum coins that can be collected from the data structure
+ */
 func find_coins(start_from Cell) {
 	keys := make([]Cell, 0)
 	for i := start_from.x; i < width; i++ {
@@ -94,15 +98,13 @@ func find_coins(start_from Cell) {
 	}
 	moves := [4]string{"high_jump", "standard_move", "standard_jump", "long_jump"}
 	for _, cell := range keys {
-		//result_map := coin_result[cell]
 		for _, move := range moves {
 			val := coin_result[cell][move]
 			if len(resultant_coins[val.cell.x][val.cell.y]) > 0 {
 				temp := get_unique_coins(append(resultant_coins[cell.x][cell.y], val.end_cells...))
 				if len(temp) > len(resultant_coins[val.cell.x][val.cell.y]) {
 					resultant_coins[val.cell.x][val.cell.y] = temp
-				} /*else {
-				}*/
+				}
 			} else {
 				resultant_coins[val.cell.x][val.cell.y] = get_unique_coins(append(resultant_coins[cell.x][cell.y], val.end_cells...))
 			}
@@ -137,13 +139,21 @@ func in_array(cell Cell, cell_elements []Cell) bool {
 	return false
 }
 
+/**
+This function essentially calcualtes the number of coins
+that can be calculated from every possible move
+It stores results in map like this
+{cell} {"high_jump": {coins collected}, {"standard_move": {coins_collected}}}
+*/
 func play(start_cell Cell, coin_count int) (Cell, []int) {
 	temp_cell := start_cell
 	coins := make([]int, 0)
 	for i := start_cell.x; i < width; i++ {
-		//diagonal_cell := Cell{temp_cell.x + 1, temp_cell.y + 1}
 		temp_cell = Cell{i, temp_cell.y}
 		_, temp_cell = falling_move(temp_cell)
+		if len(coin_result[temp_cell]) > 0 {
+			break
+		}
 		sm_cells, sm_end_cell := standard_move(temp_cell)
 		sj_cells, sj_end_cell := standard_jump(temp_cell)
 		hj_cells, hj_end_cell := high_jump(temp_cell)
@@ -171,7 +181,6 @@ func play(start_cell Cell, coin_count int) (Cell, []int) {
 			}
 		}
 	}
-	//sort.Sort(keys)
 	return temp_cell, coins
 }
 
