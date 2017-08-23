@@ -24,3 +24,4 @@ The first row is contains two integers: `rows` and `columns`. The search-grid co
 
 Your program should output to the console the entire search grid with the words highlighted a different color (say yellow).
 
+![example](https://git.enova.com/raw/fun/the-coding-zone/master/problem-2017-08/output.png)
