@@ -1,0 +1,6 @@
+4 4
+ABAB
+BABA
+ABAB
+BABA
+ABA
