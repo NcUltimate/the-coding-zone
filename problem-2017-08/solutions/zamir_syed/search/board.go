@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"math/rand"
 )
 
 // Cell ...
@@ -24,34 +24,51 @@ type Board struct {
 	Words []*Word
 }
 
+func (b Board) Draw() {
+
+	// Dimensions
+	fmt.Printf("%d %d\n", b.R, b.C)
+
+	// Cells
+	for r := 0; r < b.R; r++ {
+		for c := 0; c < b.C; c++ {
+			cell := b.Cells[r][c]
+			fmt.Printf("%s", string(cell.Char))
+		}
+		fmt.Println()
+	}
+
+	// Words
+	for _, w := range b.Words {
+		fmt.Println(w.Text)
+	}
+}
+
 // String ...
-func (b Board) String() string {
-	var result string
+func (b Board) String() {
 
 	// Cells
 	for r := 0; r < b.R; r++ {
 		for c := 0; c < b.C; c++ {
 			cell := b.Cells[r][c]
 			if !cell.Hit {
-				result += fmt.Sprintf("%s", string(cell.Char))
+				fmt.Printf("%s", string(cell.Char))
 			} else {
-				result += fmt.Sprintf("\x1B[33m%s\033[0m", string(cell.Char))
+				fmt.Printf("\x1B[33m%s\033[0m", string(cell.Char))
 			}
-			result += " "
+			fmt.Printf(" ")
 		}
-		result += "\n"
+		fmt.Println()
 	}
 
 	// Words
-	result += "\n"
 	for _, w := range b.Words {
 		if !w.Found {
-			result += w.Text + "\n"
+			fmt.Println(w.Text)
 		} else {
-			result += fmt.Sprintf("\x1B[34m%s\033[0m\n", w.Text)
+			fmt.Printf("\x1B[34m%s\033[0m\n", w.Text)
 		}
 	}
-	return result
 }
 
 // NewBoard ...
@@ -112,6 +129,48 @@ func (b *Board) Check(r, c, dX, dY int, word string) bool {
 	return true
 }
 
+// Scan scans for a word
+func (b *Board) Scan(r, c, dX, dY int) (string, bool) {
+
+	// Zero Delta (Nothing To Do)
+	if dX == 0 && dY == 0 {
+		return "", false
+	}
+
+	// Length: 5 to 10
+	for s := 10; s >= 6; s-- {
+
+		// Build Word
+		var word string
+
+		x := r
+		y := c
+		var dead bool
+		for z := 0; z < s && !dead; z++ {
+			
+			// Off Board!
+			character := b.Char(x, y)
+			if len(character) == 0 {
+				dead = true
+				break
+			}
+
+			word += character
+			x += dX
+			y += dY
+		}
+
+		// Check Word
+		if !dead {
+			if Valid(word) {
+				return word, true
+			}
+		}
+	}
+
+	return "", false
+}
+
 // Solve will solve the board
 func (b *Board) Solve() {
 	for r := 0; r < b.R; r++ {
@@ -122,6 +181,27 @@ func (b *Board) Solve() {
 						if b.Check(r, c, dX, dY, w.Text) {
 							w.Found = true
 						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func (b *Board) Random() {
+	for r := 0; r < b.R; r++ {
+		for c := 0; c < b.C; c++ {
+			i := byte(65 + rand.Int() % 26)
+			b.Cells[r][c].Char = string(i)
+		}
+	}
+
+	for r := 0; r < b.R; r++ {
+		for c := 0; c < b.C; c++ {
+			for dX := -1; dX <= 1; dX++ {
+				for dY := -1; dY <= 1; dY++ {
+					if word, found := b.Scan(r, c, dX, dY); found {
+						b.Words = append(b.Words, &Word{Text: word})
 					}
 				}
 			}
