@@ -25,12 +25,13 @@ module WordSearch
           next if marked[key]
 
           marked[key] = true
-          coord   = locations[key]
-          letter  = grid[coord.x][coord.y]
+          coord = locations[key]
+          letter = grid[coord.x][coord.y]
           grid[coord.x][coord.y] = red(letter)
         end
       end
-      grid.map(&:join).join("\n")
+
+      grid.map { |w| w.join(' ') }.join("\n")
     end
 
     private
@@ -52,8 +53,7 @@ module WordSearch
     def to_key(k)
       orig_len = (search_str.length / 2)
       return k if k < orig_len
-
-      orig_len - ((k) % orig_len)
+      orig_len - (k % orig_len) - 1
     end
 
     def red(char)
@@ -163,7 +163,7 @@ module WordSearch
 
       # add reversal of everything
       temp = @search_str.reverse
-      @search_str << ' ' << temp
+      @search_str << '  ' << temp
     end
   end
 end
