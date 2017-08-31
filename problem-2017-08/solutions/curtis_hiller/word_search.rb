@@ -1,10 +1,10 @@
 class WordSearch
-
   attr_accessor :size, :letters, :rows, :words, :highlights
   def initialize(file_path = '')
     @letters = {}
     @words = []
     @highlights = []
+
     ingest_file!(file_path)
     solve
     output_colorized
@@ -35,73 +35,96 @@ class WordSearch
       break if y == size[1]
     end
 
-    f.each_line { |line| words << line.to_s.gsub(/\s/,'') }
+    f.each_line { |line| words << line.to_s.gsub(/\s/, '') }
   end
 
-  def find_letter(x, y, letter)
+  def location_has_letter?(x, y, letter)
     return unless x >= 0 && y >= 0
     return unless x < size[0] && y < size[1]
     return true if letter == rows[x][y]
   end
 
-  def path(xy, delta_x, delta_y, word_letters)
+  def follow_word_path(xy, delta_x, delta_y, word_letters)
     x = xy[0]
     y = xy[1]
-    idx = 1
     path = []
     path << [x, y]
+
     x += delta_x
     y += delta_y
-    while find_letter(x, y, word_letters[idx])
+    idx = 1
+    while location_has_letter?(x, y, word_letters[idx])
       path << [x, y]
       return path if path.length == word_letters.length
       x += delta_x
       y += delta_y
       idx += 1
     end
+
     false
   end
 
-  def go(xy, word_letters)
-    # up left (-1, 1)
-    new_path = path(xy, -1, 1, word_letters)
-    return new_path if new_path
+  def find_word_path(xy, word_letters)
+    word_length = word_letters.length
+
+    # left and...
+    if xy[0] >= word_length
+      # only left (-1, 0)
+      new_path = follow_word_path(xy, -1, 0, word_letters)
+      return new_path if new_path
+
+      # down (-1, 1)
+      if xy[1] <= size[1] - word_length
+        new_path = follow_word_path(xy, -1, 1, word_letters)
+        return new_path if new_path
+      end
+
+      # up (-1, -1)
+      if xy[1] >= word_length - 1
+        new_path = follow_word_path(xy, -1, -1, word_letters)
+        return new_path if new_path
+      end
+    end
+
+    # right and...
+    if xy[0] <= size[0] - word_length
+      # only right
+      new_path = follow_word_path(xy, 1, 0, word_letters)
+      return new_path if new_path
+
+      # down (1, 1)
+      if xy[1] <= size[1] - word_length
+        new_path = follow_word_path(xy, 1, 1, word_letters)
+        return new_path if new_path
+      end
+
+      # up (1, -1)
+      if xy[1] >= word_length - 1
+        new_path = follow_word_path(xy, 1, -1, word_letters)
+        return new_path if new_path
+      end
+    end
 
     # down (0, 1)
-    new_path = path(xy, 0, 1, word_letters)
-    return new_path if new_path
-
-    # down right (1, 1)
-    new_path = path(xy, 1, 1, word_letters)
-    return new_path if new_path
-
-    # right (1, 0)
-    new_path = path(xy, 1, 0, word_letters)
-    return new_path if new_path
-
-    # up right (1, -1)
-    new_path = path(xy, 1, -1, word_letters)
-    return new_path if new_path
+    if xy[1] <= size[1] - word_length
+      new_path = follow_word_path(xy, 0, 1, word_letters)
+      return new_path if new_path
+    end
 
     # up (0, -1)
-    new_path = path(xy, 0, -1, word_letters)
-    return new_path if new_path
+    if xy[1] >= word_length - 1
+      new_path = follow_word_path(xy, 0, -1, word_letters)
+      return new_path if new_path
+    end
 
-    # up left (-1, -1)
-    new_path = path(xy, -1, -1, word_letters)
-    return new_path if new_path
-
-    # left (-1, 0)
-    new_path = path(xy, -1, 0, word_letters)
-    return new_path if new_path
+    []
   end
 
   def solve
     words.each do |word|
       word_letters = word.split('')
       letters[word_letters[0]].each do |xy|
-        results = go(xy, word_letters)
-        results.each { |res| highlights << res } if results
+        @highlights += find_word_path(xy, word_letters)
       end
     end
   end
@@ -112,12 +135,11 @@ class WordSearch
       x = 0
       output = ''
       while x < size[0]
-        letter = rows[x][y]
         output <<
           if highlights.include?([x, y])
-            "\e[33m#{letter}\e[0m"
+            "\e[30m\e[46m#{rows[x][y]}\e[0m\e[0m"
           else
-            letter
+            rows[x][y]
           end
         x += 1
       end
