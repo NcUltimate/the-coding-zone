@@ -193,8 +193,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', type=argparse.FileType('r'))
     f = [l.strip() for l in parser.parse_args().infile.readlines()]
-    rows = int(f[0][0])
-    columns = int(f[0][2])
+    rows_and_columns = f[0].split()
+    rows = int(rows_and_columns[0])
+    columns = int(rows_and_columns[1])
     search_terms = f[rows+1:]
     grid = f[1:rows+1]
 

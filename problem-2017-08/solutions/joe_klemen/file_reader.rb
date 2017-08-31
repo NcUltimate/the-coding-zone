@@ -12,19 +12,10 @@ module WordSearch
     end
 
     def read!
-      [
-        grid,
-        words
-      ]
+      [grid, words]
     end
 
     private
-
-    def to_grid(coord)
-      coord[0] = coord[0].to_i
-      coord[1] = coord[1].to_i
-      coord
-    end
 
     def lines
       @lines ||= File.open(filename, 'r') do |f|
