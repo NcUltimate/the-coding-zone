@@ -1,5 +1,6 @@
 require "active_support/all"
 require 'set'
+require 'benchmark'
 class Grid
   attr_accessor :rows, :cols, :matrix, :words
   def initialize(file)
@@ -32,6 +33,8 @@ class Wordsearch
         s.merge(search_horizontal(word, grid))
         s.merge(search_vertical(word, grid))
         s.merge(search_diagonal(word, grid))
+        s.merge(search_row_diagonal_rev(word, grid))
+        s.merge(search_col_diagonal_rev(word, grid))
       end
       print_grid(grid.matrix, s)
     end
@@ -41,6 +44,7 @@ class Wordsearch
       matrix.each do |r|
         r.each do |c|
           print s.member?(j) ? "\e[31m#{c}\e[0m" : c
+          print " "
           j += 1
         end
         puts
@@ -48,16 +52,18 @@ class Wordsearch
     end
 
     def found_match?(row, i, word)
-      row[i..word.length].join == word || row[i..word.length].join == word.reverse
+      row[i...(word.length+i)].join == word || row[i...(word.length+i)].join == word.reverse
     end
 
     def search_horizontal(word, grid)
       s = Set.new
       grid.matrix.each_with_index do |row, idx|
-        (0..(row.length - word.length)).each do |i|
-          start_char_index = idx * row.length + i
-          last_char_index = idx * row.length + word.length
-          return ((start_char_index)..(last_char_index)).to_set if found_match?(row, i, word)
+        match1 = (row.join) =~ /#{word}/
+        match2 = (row.join) =~ /#{word.reverse}/
+        if match1 || match2
+          start_char_index = idx * row.length + (match1 || match2)
+          last_char_index = idx * row.length + word.length + (match1 || match2)
+          s.merge(((start_char_index)...(last_char_index)).to_set)
         end
       end
       s
@@ -66,8 +72,11 @@ class Wordsearch
     def search_vertical(word, grid)
       s = Set.new
       grid.matrix.transpose.each_with_index do |row, idx|
-        (0..(row.length - word.length)).each do |i|
-          return (i..word.length).map { |n| n * grid.cols.to_i + idx }.to_set if found_match?(row, i, word)
+        match1 = (row.join) =~ /#{word}/
+        match2 = (row.join) =~ /#{word.reverse}/
+        if match1 || match2
+          i = match1 || match2
+          s.merge((i...(word.length + i)).map { |n| n * grid.cols.to_i + idx }.to_set)
         end
       end
       s
@@ -79,26 +88,85 @@ class Wordsearch
       row_set = Set.new
       start_num = nil
       row_set = search_row_diagonal(word, grid)
-      return row_set unless row_set.empty?
+      s.merge(row_set) unless row_set.empty?
 
       col_set = Set.new
       col_set = search_col_diagonal(word, grid)
-      return col_set unless col_set.empty?
+      s.merge(col_set) unless col_set.empty?
 
+      return s
+    end
+
+    def search_row_diagonal_rev(word, grid)
+      k = 0
+      s = Set.new
+      l = 0
+      str = ""
+      (k...grid.rows.to_i).reverse_each do |i|
+        l = 0
+        (0..i).reverse_each do |j|
+          str += grid.matrix[j][l]
+          l += 1
+        end
+
+        match1 = str =~ /#{word}/
+        match2 = str =~ /#{word.reverse}/
+        if match1 || match2
+          match = match1 || match2
+          start_pos = (i - match) * grid.cols.to_i + match
+          s.merge(reverse_diagonal_elements(word, start_pos, grid.cols.to_i))
+        end
+        str = ""
+      end
+      s
+    end
+
+    def search_col_diagonal_rev(word, grid)
+      k = 0
+      s = Set.new
+      l = grid.rows.to_i - 1
+      str = ""
+      start_pos = -1
+      (k...grid.rows.to_i).reverse_each do |i|
+        l = grid.rows.to_i - i - 1
+        m = grid.rows.to_i - 1
+        start_pos += 1
+        n = l
+        (l...grid.cols.to_i).each do |j|
+          str += grid.matrix[m][l]
+          l += 1
+          m -= 1
+        end
+        match1 = str =~ /#{word}/
+        match2 = str =~ /#{word.reverse}/
+        if match1 || match2
+          match = match1 || match2
+          start_num = (grid.rows.to_i - 1 - match) * grid.cols.to_i + start_pos +  match
+          s.merge(reverse_diagonal_elements(word, start_num, grid.cols.to_i))
+        end
+        str = ""
+      end
       return s
     end
 
     def search_col_diagonal(word, grid)
       k = 0
       s = Set.new
+      l = 0
+      start_pos = -1
       (k...grid.cols.to_i).each do |i|
         str = ""
-        (i...grid.cols.to_i).each do |j|
-          if j < grid.cols.to_i && (j-k) < grid.rows.to_i
-            str += grid.matrix[j-k][j]
-            start_num = search_diagonal_line(word, str, i, grid.cols.to_i)
-            return diagonal_elements(word, start_num, grid.cols.to_i) unless start_num.nil?
-          end
+        l += 1
+        start_pos += 1
+        str = (i...grid.cols.to_i).collect do |j|
+          grid.matrix[j-k][j] if j < grid.cols.to_i && (j-k) < grid.rows.to_i
+        end.join
+        match1 = str =~ /#{word}/
+        match2 = str =~ /#{word.reverse}/
+        if match1 || match2
+          match = match1 || match2
+          start_num = start_pos + grid.cols.to_i * match + match
+          s.merge(diagonal_elements(word, start_num, grid.cols.to_i))
         end
         k += 1
       end
@@ -108,14 +176,19 @@ class Wordsearch
     def search_row_diagonal(word, grid)
       k = 0
       s = Set.new
-      (0...grid.cols.to_i).each do |i|
+      l = -1
+      (0...grid.rows.to_i).each do |i|
         str = ""
-        (i...grid.cols.to_i).each do |j|
-          if j < grid.rows.to_i
-            str += grid.matrix[j][j-k]
-            start_num = search_diagonal_line(word, str, i, grid.cols.to_i) if word.length == str.length
-            return diagonal_elements(word, start_num, grid.cols.to_i) unless start_num.nil?
-          end
+        l += 1
+
+        str =  (i...grid.rows.to_i).collect { |j| grid.matrix[j][j-k]}.join
+
+        match1 = str =~ /#{word}/
+        match2 = str =~ /#{word.reverse}/
+        if match1 || match2
+          match = match1 || match2
+          start_pos = l * grid.cols.to_i + match * grid.cols.to_i +  match
+          s.merge(diagonal_elements(word, start_pos, grid.cols.to_i))
         end
         k += 1
       end
@@ -133,12 +206,15 @@ class Wordsearch
       arr.to_set
     end
 
-    def search_diagonal_line(word, line, start_num, offset)
-      (0..line.length).each do |i|
-        return start_num if found_match?(line.split(//), i, word)
-        start_num = start_num + offset + 1
+    def reverse_diagonal_elements(word, start, cols)
+      arr = Array.new
+      arr << start
+      temp = start
+      (2..(word.length)).each do |_|
+        temp = temp - cols + 1
+        arr << temp
       end
-      return nil
+      arr.to_set
     end
  end
 end
