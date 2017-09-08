@@ -44,6 +44,7 @@ class Wordsearch
       matrix.each do |r|
         r.each do |c|
           print s.member?(j) ? "\e[31m#{c}\e[0m" : c
+          print " "
           j += 1
         end
         puts
@@ -107,6 +108,7 @@ class Wordsearch
           str += grid.matrix[j][l]
           l += 1
         end
+
         match1 = str =~ /#{word}/
         match2 = str =~ /#{word.reverse}/
         if match1 || match2
@@ -134,7 +136,6 @@ class Wordsearch
           str += grid.matrix[m][l]
           l += 1
           m -= 1
-
         end
         match1 = str =~ /#{word}/
         match2 = str =~ /#{word.reverse}/
@@ -157,9 +158,9 @@ class Wordsearch
         str = ""
         l += 1
         start_pos += 1
-        (i...grid.cols.to_i).each do |j|
-          str += grid.matrix[j-k][j] if j < grid.cols.to_i && (j-k) < grid.rows.to_i
-        end
+        str = (i...grid.cols.to_i).collect do |j|
+          grid.matrix[j-k][j] if j < grid.cols.to_i && (j-k) < grid.rows.to_i
+        end.join
         match1 = str =~ /#{word}/
         match2 = str =~ /#{word.reverse}/
         if match1 || match2
@@ -179,9 +180,9 @@ class Wordsearch
       (0...grid.rows.to_i).each do |i|
         str = ""
         l += 1
-        (i...grid.rows.to_i).each do |j|
-          str += grid.matrix[j][j-k]
-        end
+
+        str =  (i...grid.rows.to_i).collect { |j| grid.matrix[j][j-k]}.join
+
         match1 = str =~ /#{word}/
         match2 = str =~ /#{word.reverse}/
         if match1 || match2
