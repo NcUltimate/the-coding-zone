@@ -1,6 +1,6 @@
 # Intersections
 
-Write a program that lists the intersection polygons when multiple polygons are rendered on the same graph
+Write a program that lists the intersection polygons when two polygons are rendered on the same graph
 
 ## Input
 
@@ -23,3 +23,9 @@ Each input polygon is provided in this file as, first, the number of vertices, a
 
 Your program should output a list of all intersection polygons, formatted in a similar fashion to the input polygons
 
+## Rules of the Game
+
+* No polygon will self-intersect
+* The polygons themselves are not necessarily convex
+* No point will be repeated
+* No two edges of a single polygon will intersect (further clarification of "no self-interesection")
