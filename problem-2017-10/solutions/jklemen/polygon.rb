@@ -14,12 +14,16 @@ module Intersections
       end
     end
 
-    def intersects_point?(point)
-      line = Line.new(point, center * Point.new(4, 1))
+    def intersections(line)
       intersections = edges.reduce([]) do |pts, edge|
         pts << edge.intersection(line)
       end
-      intersections.compact.uniq.length % 2 != 0
+      intersections.compact.uniq
+    end
+
+    def intersects_point?(point)
+      line = Line.new(point, point + Point.new(99999999, 0))
+      intersections(line).length % 2 != 0
     end
 
     def intersects_line?(line)
@@ -43,7 +47,7 @@ module Intersections
           last = p
           next edges
         end
-        edges << Line.new(p, last)
+        edges << Line.new(last, p)
         last = p
         edges
       end

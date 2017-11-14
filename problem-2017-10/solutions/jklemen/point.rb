@@ -2,12 +2,16 @@ module Intersections
   class Point < Shape
     attr_accessor :x, :y
     def initialize(x = 0, y = 0)
-      self.x = x
-      self.y = y
+      self.x = x.round(4)
+      self.y = y.round(4)
     end
 
     def +(point)
       Point.new(self.x + point.x, self.y + point.y)
+    end
+
+    def -(point)
+      Point.new(self.x - point.x, self.y - point.y)
     end
 
     def *(point)
@@ -20,7 +24,7 @@ module Intersections
     end
 
     def hash
-      [x.round(4), y.round(4)].hash
+      [x, y].hash
     end
 
     def intersects_point?(point)
@@ -36,7 +40,7 @@ module Intersections
     end
 
     def to_s
-      "#<Point (#{x}, #{y})>"
+      "(#{x}, #{y})"
     end
 
     def inspect

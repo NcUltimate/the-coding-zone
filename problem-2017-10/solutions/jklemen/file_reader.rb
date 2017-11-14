@@ -12,7 +12,10 @@ module Intersections
     end
 
     def read!
-      [grid, words]
+      [
+        Polygon.new(points1),
+        Polygon.new(points2)
+      ]
     end
 
     private
@@ -23,16 +26,27 @@ module Intersections
       end
     end
 
-    def grid
-      lines[1..dimensions[0]]
+    def to_point(str)
+      m = str.match(/(\d+) (\d+)/)
+      x = m ? m[1].to_i : 0
+      y = m ? m[2].to_i : 0
+      Point.new(x, y)
     end
 
-    def words
-      lines[(dimensions[0] + 1)..-1]
+    def size1
+      lines[0].to_i
     end
 
-    def dimensions
-      @dimensions ||= lines[0].split(/s/).map(&:to_i)
+    def size2
+      lines[size1 + 1].to_i
+    end
+
+    def points1
+      @points1 ||= lines[1..size1].map(&method(:to_point))
+    end
+
+    def points2
+      @points2 ||= lines[(size1 + 2)..-1].map(&method(:to_point))
     end
   end
 end

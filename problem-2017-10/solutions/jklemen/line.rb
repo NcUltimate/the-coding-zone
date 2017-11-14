@@ -42,12 +42,12 @@ module Intersections
     end
 
     def intersection(line)
-      return if slope == line.slope && slope == Float::INFINITY
+      return if slope == line.slope && slope.abs == Float::INFINITY
       int = 
-        if line.slope == Float::INFINITY
+        if line.slope.abs == Float::INFINITY
           x = line.p1.x
           Point.new(x, f(x))
-        elsif slope == Float::INFINITY
+        elsif slope.abs == Float::INFINITY
           x = p1.x
           Point.new(x, line.f(x))
         else
@@ -60,6 +60,12 @@ module Intersections
       nil
     end
 
+    def split_by?(point)
+      intersects_point?(point) &&
+        !point.eql?(p1) &&
+        !point.eql?(p2)
+    end
+
     def bounds_point?(point)
       point.x >= min_x &&
         point.x <= max_x &&
@@ -68,8 +74,12 @@ module Intersections
     end
 
     def intersects_point?(point)
-      bounds_point?(point) &&
+      return false unless bounds_point?(point)
+      if slope.abs == Float::INFINITY
+        point.x == p1.x
+      else
         f(point.x) == point.y
+      end
     end
 
     def intersects_line?(line)
