@@ -42,7 +42,8 @@ module Intersections
     end
 
     def intersection(line)
-      return if slope == line.slope && slope.abs == Float::INFINITY
+      return if slope == line.slope && [Float::INFINITY, 0].include?(slope.abs)
+
       int = 
         if line.slope.abs == Float::INFINITY
           x = line.p1.x
@@ -76,9 +77,9 @@ module Intersections
     def intersects_point?(point)
       return false unless bounds_point?(point)
       if slope.abs == Float::INFINITY
-        point.x == p1.x
+        point.x.round(4) == p1.x.round(4)
       else
-        f(point.x) == point.y
+        f(point.x).round(4) == point.y.round(4)
       end
     end
 

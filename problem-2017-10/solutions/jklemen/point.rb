@@ -39,8 +39,22 @@ module Intersections
       poly.intersects_point?(self)
     end
 
+    def dist_from(point)
+      ys = (point.y - y) ** 2
+      xs = (point.x - x) ** 2
+      Math.sqrt(xs + ys)
+    end
+
     def to_s
-      "(#{x}, #{y})"
+      xs = (x.to_i == x ? x.to_i : x)
+      ys = (y.to_i == y ? y.to_i : y)
+      "(#{xs}, #{ys})"
+    end
+
+    def to_output_s
+      xs = (x.to_i == x ? x.to_i : x)
+      ys = (y.to_i == y ? y.to_i : y)
+      "#{xs} #{ys}"
     end
 
     def inspect

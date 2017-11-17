@@ -27,7 +27,7 @@ module Intersections
     end
 
     def to_point(str)
-      m = str.match(/(\d+) (\d+)/)
+      m = str.match(/([-\d]+) ([-\d]+)/)
       x = m ? m[1].to_i : 0
       y = m ? m[2].to_i : 0
       Point.new(x, y)

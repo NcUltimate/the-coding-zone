@@ -1,51 +1,131 @@
 module Intersections
   class Algorithm
-    def self.run!(poly1, poly2)
-      self.new(poly1, poly2).run!
+    def self.run!(raw1, raw2)
+      self.new(raw1, raw2).run!
     end
 
-    attr_accessor :poly1, :poly2, :manifest
-    def initialize(poly1, poly2)
-      self.poly1 = poly1
-      self.poly2 = poly2
-      self.manifest = {}
+    # polygons
+    attr_accessor :raw1, :raw2, :augmented1, :augmented2
+
+    # algorithm variables
+    attr_accessor :visited, :children, :solution
+
+    def initialize(raw1, raw2)
+      self.raw1 = raw1
+      self.raw2 = raw2
+
+      self.visited = Set.new
+      self.solution = []
+      self.children = {}
     end
 
     def run!
-      initialize_with_polys
-      puts "==============="
-      poly1.edges.each do |edge1|
-        poly2.edges.each do |edge2|
-          int = edge1.intersection(edge2)
-          next unless int
+      # 1. Augment polygons with intersections
+      self.augmented1 = augmented_poly(raw1, raw2)
+      self.augmented2 = augmented_poly(raw2, raw1)
 
-          if edge1.split_by?(int)
-            add_entry(Line.new(int, edge1.p1))
-            add_entry(Line.new(int, edge1.p2))
-          end
+      # 2. Starting at every point, try to find a path back to itself
+      #     via points that intersect both polygons.
+      start_points = []
+      queue = initial_search_queue.to_a
+      until queue.empty?
+        nxt = queue.pop
+        next if visited.member?(nxt)
 
-          if edge2.split_by?(int)
-            add_entry(Line.new(int, edge2.p1))
-            add_entry(Line.new(int, edge2.p2))
-          end
-        end
+        start_points << nxt
+        visited.add(nxt)
+        search(nxt)
       end
-      manifest
+
+      # 3. Unfold the children of each point in 'start_points'
+      #     to form new polygons and achieve the solution.
+      start_points.each do |start|
+        points = [start]
+        curr = children[start]
+        until curr.nil?
+          points << curr
+          curr = children[curr]
+        end
+        solution << points
+      end
+
+      solution
     end
 
-    private
 
-    def initialize_with_polys
-      poly1.edges.each(&method(:add_entry))
-      poly2.edges.each(&method(:add_entry))
+    # Performs a depth-first search starting at a point by
+    # grabbing all unvisited neighbors at the point, and
+    # only iterating on each neighbor if
+    #  1. That neighbor is unvisited
+    #  2. The midpoint of the line between the point and
+    #     the neighbor is also on both of the polygons
+    # Before a neighbor is iterated on, it is set as the
+    # child of the current point for purposes of discovering
+    # connected components after the search is complete.
+    def search(point)
+      queue = unvisited_augmented_neighbors(point)
+      until queue.empty?
+        nxt = queue.pop
+        next if visited.member?(nxt)
+
+        line = Line.new(point, nxt)
+        next unless augmented_intersection?(line.midpoint)
+
+        visited.add(nxt)
+        self.children[point] = nxt
+        search(nxt)
+      end
     end
 
-    def add_entry(edge)
-      puts "Adding #{edge} #{edge.p1.hash} #{edge.p2.hash}"
-      manifest[edge.p1] ||= []
-      manifest[edge.p2] ||= []
-      manifest[edge.p1] << edge.p2
-      manifest[edge.p2] << edge.p1
+
+    # Augments poly1 with points corresponding to
+    # intersections with poly2. Note this does not change
+    # the geometry, only separates existing edges into
+    # smaller edges and more points
+    def augmented_poly(poly1, poly2)
+      points = poly1.edges.inject(Set.new) do |pts, edge|
+        pts += intersections_for(poly2, edge)
+      end
+      Polygon.new(points.to_a)
+    end
+
+
+    # Finds all intersections of an edge in a polygon.
+    # Sorts the result to return the points in order from
+    # one side of the edge to the other instead of the order
+    # they intersected in.
+    def intersections_for(poly, edge)
+      ints = poly.intersections(edge)
+      ints.add(edge.p1)
+      ints.add(edge.p2)
+      ints.sort_by { |p| p.dist_from(edge.p1) }
+    end
+
+
+    # Starting points for the final phase of the algorithm.
+    # We start with all of the points in both augmented
+    # polygons and only choose the ones that intersect
+    # both polygons.
+    def initial_search_queue
+      queue = (augmented1.points + augmented2.points)
+      queue.select!(&method(:augmented_intersection?))
+    end
+
+
+    # Get neighbors for a point from both augmented polygons
+    # as long as they have not been visited.
+    def unvisited_augmented_neighbors(point)
+      neighbors = Set.new
+      neighbors += augmented1.neighbors[point] if augmented1.neighbors[point]
+      neighbors += augmented2.neighbors[point] if augmented2.neighbors[point]
+      neighbors.reject { |n| visited.member?(n) }
+    end
+
+
+    # Does this point fall within both augmented polygons?
+    def augmented_intersection?(point)
+      augmented1.intersects?(point) &&
+        augmented2.intersects?(point)
     end
   end
 end
