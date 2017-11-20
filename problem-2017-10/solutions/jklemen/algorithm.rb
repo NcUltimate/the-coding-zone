@@ -5,14 +5,15 @@ module Intersections
     end
 
     # polygons
-    attr_accessor :raw1, :raw2, :augmented1, :augmented2
+    attr_accessor :poly1, :poly2
 
     # algorithm variables
     attr_accessor :visited, :children, :solution
 
     def initialize(raw1, raw2)
-      self.raw1 = raw1
-      self.raw2 = raw2
+      # 1. Augment polygons with intersections
+      self.poly1 = augmented_poly(raw1, raw2)
+      self.poly2 = augmented_poly(raw2, raw1)
 
       self.visited = Set.new
       self.solution = []
@@ -20,10 +21,6 @@ module Intersections
     end
 
     def run!
-      # 1. Augment polygons with intersections
-      self.augmented1 = augmented_poly(raw1, raw2)
-      self.augmented2 = augmented_poly(raw2, raw1)
-
       # 2. Starting at every point, try to find a path back to itself
       #     via points that intersect both polygons.
       start_points = []
@@ -42,6 +39,8 @@ module Intersections
       start_points.each do |start|
         points = [start]
         curr = children[start]
+        next unless curr
+
         until curr.nil?
           points << curr
           curr = children[curr]
@@ -107,7 +106,7 @@ module Intersections
     # polygons and only choose the ones that intersect
     # both polygons.
     def initial_search_queue
-      queue = (augmented1.points + augmented2.points)
+      queue = (poly1.points + poly2.points)
       queue.select!(&method(:augmented_intersection?))
     end
 
@@ -116,16 +115,16 @@ module Intersections
     # as long as they have not been visited.
     def unvisited_augmented_neighbors(point)
       neighbors = Set.new
-      neighbors += augmented1.neighbors[point] if augmented1.neighbors[point]
-      neighbors += augmented2.neighbors[point] if augmented2.neighbors[point]
+      neighbors += poly1.neighbors[point] if poly1.neighbors[point]
+      neighbors += poly2.neighbors[point] if poly2.neighbors[point]
       neighbors.reject { |n| visited.member?(n) }
     end
 
 
     # Does this point fall within both augmented polygons?
     def augmented_intersection?(point)
-      augmented1.intersects?(point) &&
-        augmented2.intersects?(point)
+      poly1.intersects?(point) &&
+        poly2.intersects?(point)
     end
   end
 end
