@@ -2,8 +2,8 @@ module Intersections
   class Point < Shape
     attr_accessor :x, :y
     def initialize(x = 0, y = 0)
-      self.x = x.round(4)
-      self.y = y.round(4)
+      self.x = x.round(3)
+      self.y = y.round(3)
     end
 
     def +(point)
@@ -19,8 +19,7 @@ module Intersections
     end
 
     def eql?(point)
-      (x - point.x).abs < 0.0001 &&
-        (y - point.y).abs < 0.0001
+      x == point.x && y == point.y
     end
 
     def hash
