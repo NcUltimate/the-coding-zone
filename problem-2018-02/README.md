@@ -20,7 +20,7 @@ Your application should accept a single command-line argument that will be the s
 Your program should print the minimum number of steps needed to reach the provided input number. So, for the above example input of `200`, the program would print,
 
 ```
-... // Write a program to figure this out
+9
 ```
 
 ## Rules of the Game
