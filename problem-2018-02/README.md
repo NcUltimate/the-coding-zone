@@ -3,8 +3,8 @@
 Given: $1
 
 Problem: Only by
- # Doubling, or
- # Adding $1  
+ - Doubling, or
+ - Adding $1  
 
 Print, how many such steps you will take to reach a number passed in as a command-line argument.
 
