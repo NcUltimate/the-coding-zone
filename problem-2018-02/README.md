@@ -26,3 +26,4 @@ Your program should print the minimum number of steps needed to reach the provid
 ## Rules of the Game
 
 * Looking for the minimum number of steps to reach the number
+* The input number can be up to 1000 digits long
